@@ -1,0 +1,79 @@
+<svg
+  viewBox="0 0 160 160"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    {/* Drop shadow for 3D effect */}
+    <filter id="icon-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#302720" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <g filter="url(#icon-shadow)">
+    {/* SUN */}
+    <circle cx="112" cy="52" r="14" fill="#E2A83A" />
+    {/* Sunrays */}
+    <g stroke="#E2A83A" strokeWidth="3" strokeLinecap="round">
+      <line x1="112" y1="32" x2="112" y2="26" />
+      <line x1="112" y1="72" x2="112" y2="78" />
+      <line x1="92" y1="52" x2="86" y2="52" />
+      <line x1="132" y1="52" x2="138" y2="52" />
+      <line x1="98" y1="38" x2="94" y2="34" />
+      <line x1="126" y1="66" x2="130" y2="70" />
+      <line x1="98" y1="66" x2="94" y2="70" />
+      <line x1="126" y1="38" x2="130" y2="34" />
+    </g>
+
+    {/* SURFBOARD */}
+    <path
+      d="M 124 115 C 119 100, 122 83, 127 73 C 133 83, 136 100, 131 115 Z"
+      fill="#B96D4C"
+    />
+    <path
+      d="M 127 73 C 128 83, 129 100, 127 115"
+      stroke="#FFFDFC"
+      strokeWidth="1.2"
+      fill="none"
+      strokeLinecap="round"
+    />
+
+    {/* PALM TREES */}
+    {/* Left Palm Tree */}
+    <path
+      d="M 52 125 C 56 105, 51 83, 42 69 C 44 69, 45 73, 45 77 C 51 91, 58 105, 56 125 Z"
+      fill="#4A3C31"
+    />
+    <g fill="#69745D">
+      <path d="M 42 69 C 27 71, 10 77, 4 87 C 12 83, 28 78, 42 69 Z" />
+      <path d="M 42 69 C 33 55, 22 45, 11 45 C 21 53, 33 60, 42 69 Z" />
+      <path d="M 42 69 C 44 49, 48 34, 54 29 C 54 42, 52 54, 42 69 Z" />
+      <path d="M 42 69 C 57 59, 67 52, 77 52 C 70 62, 57 66, 42 69 Z" />
+      <path d="M 42 69 C 60 74, 72 82, 82 92 C 70 84, 54 76, 42 69 Z" />
+    </g>
+
+    {/* Right Palm Tree (Shorter) */}
+    <path
+      d="M 65 125 C 68 111, 68 98, 63 86 C 65 86, 66 89, 66 92 C 69 102, 70 112, 68 125 Z"
+      fill="#4A3C31"
+    />
+    <g fill="#69745D">
+      <path d="M 63 86 C 51 88, 38 92, 33 100 C 39 97, 52 93, 63 86 Z" />
+      <path d="M 63 86 C 56 75, 47 67, 38 67 C 46 73, 56 79, 63 86 Z" />
+      <path d="M 63 86 C 65 70, 68 58, 73 54 C 73 64, 71 74, 63 86 Z" />
+      <path d="M 63 86 C 75 78, 83 73, 91 73 C 85 81, 75 84, 63 86 Z" />
+      <path d="M 63 86 C 77 90, 87 96, 95 104 C 85 98, 72 91, 63 86 Z" />
+    </g>
+
+    {/* WAVES */}
+    {/* Golden Sand Wave */}
+    <path
+      d="M 15 125 C 50 125, 75 110, 110 118 C 130 123, 140 115, 145 118 L 145 138 L 15 138 Z"
+      fill="#E8DDCF"
+    />
+    {/* Blue Ocean Wave */}
+    <path
+      d="M 15 131 C 50 131, 75 116, 110 124 C 130 129, 140 121, 145 124 L 145 142 L 15 142 Z"
+      fill="#94B5A6"
+    />
+  </g>
+</svg>
