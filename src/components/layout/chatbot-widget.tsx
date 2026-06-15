@@ -54,7 +54,7 @@ export function ChatbotWidget() {
     setMessages((prev) => [...prev, { id: Date.now().toString(), sender: "user", text }]);
 
     setTimeout(() => {
-      let response: Message = { id: (Date.now() + 1).toString(), sender: "bot", text: "" };
+      const response: Message = { id: (Date.now() + 1).toString(), sender: "bot", text: "" };
 
       switch (id) {
         case "rooms":
