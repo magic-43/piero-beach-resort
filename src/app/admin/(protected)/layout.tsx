@@ -11,7 +11,7 @@ export default async function ProtectedAdminLayout({
   await requireAdmin();
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-resort-offwhite font-sans">
+    <div className="flex flex-col md:flex-row min-h-dvh bg-resort-offwhite font-sans">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-resort-white border-r border-resort-cocoa/10 shrink-0 fixed top-0 left-0 h-screen z-40 print:hidden">
         <AdminDesktopHeader />
@@ -33,7 +33,7 @@ export default async function ProtectedAdminLayout({
       <AdminMobileHeader />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-screen md:pb-0 pb-20 md:pl-64">
+      <main className="flex-1 flex flex-col md:pb-0 pb-20 md:pl-64">
         <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
           <AdminPageHeader />
           {children}
