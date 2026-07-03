@@ -40,6 +40,11 @@ export function AdminSidebar() {
 
 export function AdminBottomNav() {
   const pathname = usePathname();
+  const hideBottomNav = /^\/admin\/rooms\/[^/]+$/.test(pathname);
+
+  if (hideBottomNav) {
+    return null;
+  }
 
   const navItems = [
     { label: "Home", href: "/admin", icon: Home },

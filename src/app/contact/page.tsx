@@ -2,13 +2,14 @@ import { Header } from "@/components/layout/header";
 import { Reveal } from "@/components/ui/reveal";
 import { Footer } from "@/components/layout/footer";
 import { FloatingActions } from "@/components/layout/floating-actions";
-import { bookingReminderList, resort, siteImages } from "@/data/resort";
+import { resort, siteImages } from "@/data/resort";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Phone, Clock, ChevronDown } from "lucide-react";
 import { FacebookIcon, WhatsappIcon } from "@/components/ui/icons";
 
 import { createClient } from "@/lib/supabase/server";
+import { getBookingReminderList, getDynamicFaq } from "@/lib/booking-settings";
 
 export const metadata = {
   title: "Contact & Concierge | Piero Beach Resort",
@@ -19,14 +20,14 @@ export default async function ContactPage() {
   const supabase = await createClient();
   const { data: settings } = await supabase.from("resort_settings").select("*").eq("id", 1).single();
 
-  const siteEmail = settings?.site_email || resort.contact.email;
-  const siteEmailHref = settings?.site_email ? `mailto:${settings.site_email}` : resort.contact.emailHref;
   const sitePhone = settings?.site_phone || resort.contact.phone;
   const sitePhoneHref = settings?.site_phone ? `tel:${settings.site_phone.replace(/[^0-9+]/g, '')}` : resort.contact.phoneHref;
   const siteWhatsapp = settings?.site_whatsapp || resort.contact.whatsapp;
   const siteWhatsappHref = settings?.site_whatsapp ? `https://wa.me/${settings.site_whatsapp.replace(/[^0-9+]/g, '')}` : resort.contact.whatsappHref;
   const siteFacebookHref = settings?.site_facebook || resort.contact.facebookHref;
   const siteMapsHref = settings?.site_google_maps || resort.contact.mapsHref;
+  const bookingReminderList = getBookingReminderList(settings);
+  const faqItems = getDynamicFaq(settings);
   return (
     <>
       <Header />
@@ -382,7 +383,7 @@ export default async function ContactPage() {
             </div>
 
             <div className="space-y-4">
-              {resort.faq.map((faq) => (
+              {faqItems.map((faq) => (
                 <details
                   key={faq.question}
                   className="group bg-resort-offwhite rounded-lg border border-resort-cocoa/5 overflow-hidden [&_summary::-webkit-details-marker]:hidden"

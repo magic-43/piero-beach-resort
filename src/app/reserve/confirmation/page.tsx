@@ -7,9 +7,11 @@ import { FloatingActions } from "@/components/layout/floating-actions";
 import { resort } from "@/data/resort";
 import { useRouter } from "next/navigation";
 import { useReservation } from "@/context/reservation-context";
+import { useResortData } from "@/hooks/useResortData";
 
 export default function ReserveConfirmationPage() {
   const { state, nights, totalPrice, amountDueToday, remainingBalance, formatDate, formatCurrency, isHydrated, resetContext } = useReservation();
+  const { bookingSettings } = useResortData();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -78,12 +80,12 @@ export default function ReserveConfirmationPage() {
                       <div>
                         <p className="text-xs uppercase tracking-widest text-resort-cocoa/50 font-bold mb-1">Check-in</p>
                         <p className="font-medium text-resort-cocoa">{formatDate(state.checkIn)}</p>
-                        <p className="text-sm text-resort-cocoa/60">From {resort.stay.checkIn}</p>
+                        <p className="text-sm text-resort-cocoa/60">From {bookingSettings.checkIn}</p>
                       </div>
                       <div>
                         <p className="text-xs uppercase tracking-widest text-resort-cocoa/50 font-bold mb-1">Check-out</p>
                         <p className="font-medium text-resort-cocoa">{formatDate(state.checkOut)}</p>
-                        <p className="text-sm text-resort-cocoa/60">By {resort.stay.checkOut}</p>
+                        <p className="text-sm text-resort-cocoa/60">By {bookingSettings.checkOut}</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 pt-2">

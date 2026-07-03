@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Image as ImageIcon, RotateCcw, MapPin, Phone, MessageCircle } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { format } from "date-fns";
@@ -488,7 +489,13 @@ export function ManualConfirmationClient({ rooms }: { rooms: Array<{ id?: string
               <p className="mb-2 font-semibold">Assisted by:</p>
               <div className="flex flex-col items-start w-full max-w-[200px]">
                 {/* Signature sits naturally above the text */}
-                <img src="/images/signature.svg" alt="Signature" className="h-8 w-auto opacity-80 -mb-1 ml-4 pointer-events-none" />
+                <Image
+                  src="/images/signature.svg"
+                  alt="Signature"
+                  width={96}
+                  height={32}
+                  className="h-8 w-auto opacity-80 -mb-1 ml-4 pointer-events-none"
+                />
                 <div className="border-b border-resort-cocoa/40 w-full pb-1 text-resort-cocoa font-bold pl-2">
                   <span>{form.assistedBy || "Piero Beach Resort"}</span>
                 </div>

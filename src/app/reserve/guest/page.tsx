@@ -5,14 +5,16 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { ReservationProgress } from "@/components/ui/reservation-progress";
-import { bookingReminderList, resort } from "@/data/resort";
+import { resort } from "@/data/resort";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Calendar, Users, Bed, Sparkles } from "lucide-react";
 import { useReservation } from "@/context/reservation-context";
+import { useResortData } from "@/hooks/useResortData";
 
 export default function ReserveGuestPage() {
   const { state, updateState, nights, totalPrice, formatDate, formatCurrency, isHydrated } = useReservation();
+  const { bookingSettings, bookingReminders } = useResortData();
   const router = useRouter();
 
   useEffect(() => {
@@ -47,7 +49,7 @@ export default function ReserveGuestPage() {
   const room = state.selectedVilla;
   const basePrice = room.discountedRate * nights;
   const extraAdultsCount = Math.max(0, state.adultGuests - (room.maxGuests - room.extraGuestAllowance));
-  const extraAdultsCost = extraAdultsCount * 1300 * nights;
+  const extraAdultsCost = extraAdultsCount * bookingSettings.extraPersonFee * nights;
 
   return (
     <>
@@ -179,7 +181,7 @@ export default function ReserveGuestPage() {
                         <div>
                           <p className="font-medium text-resort-cocoa">{formatDate(state.checkIn)} - {formatDate(state.checkOut)}</p>
                           <p className="text-xs text-resort-cocoa/60">
-                            {nights} {nights === 1 ? "Night" : "Nights"} · {resort.stay.checkIn} check-in · {resort.stay.checkOut} check-out
+                            {nights} {nights === 1 ? "Night" : "Nights"} · {bookingSettings.checkIn} check-in · {bookingSettings.checkOut} check-out
                           </p>
                         </div>
                       </div>
@@ -220,8 +222,8 @@ export default function ReserveGuestPage() {
                     </div>
 
                     <div className="pt-6 border-t border-resort-cocoa/10 space-y-2">
-                      <p className="text-xs text-resort-cocoa/60">{resort.reminders.securityDeposit}</p>
-                      {bookingReminderList.slice(0, 2).map((item) => (
+                      <p className="text-xs text-resort-cocoa/60">{bookingReminders[4]}</p>
+                      {bookingReminders.slice(0, 2).map((item) => (
                         <p key={item} className="text-xs text-resort-cocoa/60">
                           {item}
                         </p>

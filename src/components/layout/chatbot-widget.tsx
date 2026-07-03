@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, User } from "lucide-react";
+import { MessageSquare, X, Send } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
-import { resort } from "@/data/resort";
 import { WhatsappIcon } from "@/components/ui/icons";
 import Link from "next/link";
+import { useResortData } from "@/hooks/useResortData";
 
 type Message = {
   id: string;
@@ -26,6 +26,7 @@ const QUICK_REPLIES = [
 ];
 
 export function ChatbotWidget() {
+  const { bookingSettings } = useResortData();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -69,7 +70,7 @@ export function ChatbotWidget() {
           response.text = "Piero Beach Resort accepts Bank Transfer and GCash. Payment details are shown during reservation.";
           break;
         case "checkin":
-          response.text = "Check-in is 2:00 PM. Check-out is 12:30 NN.";
+          response.text = `Check-in is ${bookingSettings.checkIn}. Check-out is ${bookingSettings.checkOut}.`;
           break;
         case "pets":
           response.text = "Piero Beach Resort is pet-friendly. Guests may bring up to two pets per villa. Additional pets may have a fee, and guests should bring cages.";

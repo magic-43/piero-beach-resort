@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireAdmin } from "./auth";
+import { getAdminUser, requireAdmin } from "./auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -187,5 +187,97 @@ export async function updateSiteDetails(data: {
       return { error: err.message };
     }
     return { error: "Failed to update site details." };
+  }
+}
+
+type UpdateRoomPayload = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  short_description: string;
+  image: string;
+  gallery: string[];
+  beds: string;
+  standard_guests: number;
+  max_extra_guests: number;
+  breakfast_guests: number;
+  capacity_label: string;
+  amenities: string[];
+  size: string;
+  view: string;
+  regular_rate: number;
+  is_active: boolean;
+};
+
+export async function updateRoom(data: UpdateRoomPayload) {
+  try {
+    const adminUser = await getAdminUser();
+    if (!adminUser) {
+      return { error: "Your admin session has expired. Please sign in again and retry saving the room." };
+    }
+
+    if (!data.id) return { error: "Room ID is required." };
+    if (!data.name.trim()) return { error: "Room name is required." };
+    if (!data.image.trim()) return { error: "Primary image is required." };
+    if (data.standard_guests < 1) return { error: "Standard guests must be at least 1." };
+    if (data.max_extra_guests < 0) return { error: "Max extra guests cannot be negative." };
+    if (data.breakfast_guests < 0) return { error: "Breakfast guests cannot be negative." };
+    const supabase = createAdminClient();
+    const { data: settings, error: settingsError } = await supabase
+      .from("resort_settings")
+      .select("global_discount_percentage")
+      .eq("id", 1)
+      .single();
+
+    if (settingsError) {
+      return { error: "Failed to load discount settings." };
+    }
+
+    const discountPercentage = Number(settings?.global_discount_percentage) || 0;
+    const discountedRate = Math.round(data.regular_rate * (1 - discountPercentage / 100));
+
+    const { error } = await supabase
+      .from("rooms")
+      .update({
+        name: data.name.trim(),
+        category: data.category,
+        description: data.description.trim(),
+        short_description: data.short_description.trim(),
+        image: data.image.trim(),
+        gallery: data.gallery,
+        beds: data.beds.trim(),
+        standard_guests: data.standard_guests,
+        max_extra_guests: data.max_extra_guests,
+        breakfast_guests: data.breakfast_guests,
+        capacity_label: data.capacity_label.trim(),
+        amenities: data.amenities,
+        size: data.size.trim(),
+        view: data.view.trim(),
+        regular_rate: data.regular_rate,
+        discounted_rate: discountedRate,
+        is_active: data.is_active,
+      })
+      .eq("id", data.id);
+
+    if (error) {
+      return { error: "Failed to update room." };
+    }
+
+    revalidatePath("/admin/rooms");
+    revalidatePath(`/admin/rooms/${data.id}`);
+    revalidatePath("/");
+    revalidatePath("/rooms");
+    revalidatePath("/rooms/cabin-suite");
+    revalidatePath("/rooms/cabin-villa");
+    revalidatePath("/rooms/ibiza-room");
+    revalidatePath("/rooms/family-room");
+    revalidatePath("/rooms/cancun");
+    revalidatePath("/reserve");
+    revalidatePath("/reserve/villa");
+    return { success: true };
+  } catch (err: unknown) {
+    if (err instanceof Error) return { error: err.message };
+    return { error: "An unexpected error occurred." };
   }
 }

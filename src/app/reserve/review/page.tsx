@@ -5,15 +5,17 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { ReservationProgress } from "@/components/ui/reservation-progress";
-import { bookingReminderList, resort } from "@/data/resort";
+import { resort } from "@/data/resort";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Users, Bed, CreditCard, Clock, ShieldCheck } from "lucide-react";
 import { useReservation } from "@/context/reservation-context";
+import { useResortData } from "@/hooks/useResortData";
 
 export default function ReserveReviewPage() {
   const { state, nights, totalPrice, formatDate, formatCurrency, isHydrated } = useReservation();
+  const { bookingSettings, bookingReminders } = useResortData();
   const router = useRouter();
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function ReserveReviewPage() {
   const basePrice = room.discountedRate * nights;
   const baseCapacity = room.maxGuests - room.extraGuestAllowance;
   const extraAdultsCount = Math.max(0, state.adultGuests - baseCapacity);
-  const extraAdultsCost = extraAdultsCount * 1300 * nights;
+  const extraAdultsCost = extraAdultsCount * bookingSettings.extraPersonFee * nights;
   const deposit = Math.round(totalPrice / 2);
   const { fullName, email, phone, specialRequests } = state.guestDetails;
 
@@ -112,12 +114,12 @@ export default function ReserveReviewPage() {
                       <div>
                         <p className="text-xs tracking-widest text-resort-cocoa/50 font-bold uppercase mb-1">Check-in</p>
                         <p className="font-medium text-resort-cocoa text-lg">{formatDate(state.checkIn)}</p>
-                        <p className="text-sm text-resort-cocoa/50">From {resort.stay.checkIn}</p>
+                        <p className="text-sm text-resort-cocoa/50">From {bookingSettings.checkIn}</p>
                       </div>
                       <div>
                         <p className="text-xs tracking-widest text-resort-cocoa/50 font-bold uppercase mb-1">Check-out</p>
                         <p className="font-medium text-resort-cocoa text-lg">{formatDate(state.checkOut)}</p>
-                        <p className="text-sm text-resort-cocoa/50">By {resort.stay.checkOut}</p>
+                        <p className="text-sm text-resort-cocoa/50">By {bookingSettings.checkOut}</p>
                       </div>
                       <div>
                         <p className="text-xs tracking-widest text-resort-cocoa/50 font-bold uppercase mb-1">Guests</p>
@@ -169,7 +171,7 @@ export default function ReserveReviewPage() {
                       </li>
                     </ul>
                     <div className="mt-6 pt-6 border-t border-resort-cocoa/10 space-y-2">
-                      {bookingReminderList.slice(0, 4).map((item) => (
+                      {bookingReminders.slice(0, 4).map((item) => (
                         <p key={item} className="text-xs text-resort-cocoa/60">
                           {item}
                         </p>

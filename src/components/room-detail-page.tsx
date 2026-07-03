@@ -9,6 +9,7 @@ import { AccommodationCard } from "@/components/ui/accommodation-card";
 import { resort, type ResortRoom } from "@/data/resort";
 import { useReservation } from "@/context/reservation-context";
 import { useResortData } from "@/hooks/useResortData";
+import { formatPHPCurrency } from "@/lib/currency";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -43,6 +44,7 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
   const widgetContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { state, updateState, formatDate, isHydrated } = useReservation();
+  const { bookingSettings } = useResortData();
 
   const gallery = room.gallery?.length ? room.gallery : [room.image];
   const similarRooms = allRooms.filter((item) => item.id !== room.id).slice(0, 3);
@@ -196,8 +198,8 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
     { icon: BedDouble, label: "Beds", value: room.beds },
     { icon: Maximize, label: "Size", value: room.size ?? "Room details coming soon" },
     { icon: Sun, label: "View", value: room.view ?? "Resort view" },
-    { icon: Clock, label: "Check-in", value: resort.stay.checkIn },
-    { icon: Clock, label: "Check-out", value: resort.stay.checkOut },
+    { icon: Clock, label: "Check-in", value: bookingSettings.checkIn },
+    { icon: Clock, label: "Check-out", value: bookingSettings.checkOut },
   ];
 
   return (
@@ -245,11 +247,11 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
               <span className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-[#c4a47c]" /> {room.capacityLabel}
               </span>
-              <span className="text-[#c4a47c]">•</span>
+              <span className="text-[#c4a47c]">&bull;</span>
               <span className="flex items-center gap-1.5">
                 <BedDouble className="w-4 h-4 text-[#c4a47c]" /> {room.beds}
               </span>
-              <span className="text-[#c4a47c]">•</span>
+              <span className="text-[#c4a47c]">&bull;</span>
               <span className="flex items-center gap-1.5">
                 <Coffee className="w-4 h-4 text-[#c4a47c]" /> Breakfast for {room.breakfastIncluded}
               </span>
@@ -271,12 +273,12 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
                   {room.name} is designed for guests who want restful accommodations with real resort comforts and direct access to the atmosphere of Piero Beach Resort.
                 </p>
                 <p className="text-resort-cocoa/80 text-lg leading-relaxed mb-6">
-                  This stay includes a discounted rate of ₱{room.discountedRate.toLocaleString("en-PH")} per night, with the regular rate shown for comparison at ₱{room.regularRate.toLocaleString("en-PH")}. Breakfast for {room.breakfastIncluded}, a jacuzzi, and a dipping tub are already part of the room package.
+                  This stay includes a discounted rate of {formatPHPCurrency(room.discountedRate)} per night, with the regular rate shown for comparison at {formatPHPCurrency(room.regularRate)}. Breakfast for {room.breakfastIncluded}, a jacuzzi, and a dipping tub are already part of the room package.
                 </p>
                 <p className="text-resort-cocoa/80 text-lg leading-relaxed mb-12">
                   {room.extraGuestAllowance
                     ? `The room is ${room.capacityLabel.toLowerCase()} and allows ${room.extraGuestAllowance} extra guest${room.extraGuestAllowance > 1 ? "s" : ""}.`
-                    : `The room is ${room.capacityLabel.toLowerCase()} with no extra guest allowance currently listed.`} Check-in starts at {resort.stay.checkIn} and check-out is at {resort.stay.checkOut}.
+                    : `The room is ${room.capacityLabel.toLowerCase()} with no extra guest allowance currently listed.`} Check-in starts at {bookingSettings.checkIn} and check-out is at {bookingSettings.checkOut}.
                 </p>
 
                 <div className="border-t border-resort-cocoa/10 pt-10">
@@ -342,13 +344,13 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
                           onClick={() => setActivePhoto((prev) => (prev === 0 ? gallery.length - 1 : prev - 1))}
                           className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-resort-white/80 hover:bg-resort-white text-resort-cocoa flex items-center justify-center shadow transition-all focus:outline-none opacity-0 group-hover:opacity-100 duration-300"
                         >
-                          ←
+                          â†
                         </button>
                         <button
                           onClick={() => setActivePhoto((prev) => (prev === gallery.length - 1 ? 0 : prev + 1))}
                           className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-resort-white/80 hover:bg-resort-white text-resort-cocoa flex items-center justify-center shadow transition-all focus:outline-none opacity-0 group-hover:opacity-100 duration-300"
                         >
-                          →
+                          â†’
                         </button>
                       </>
                     )}
@@ -387,9 +389,9 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
                       Starting at
                     </span>
                     <div className="text-resort-cocoa font-bold text-3xl font-serif">
-                      ₱{room.discountedRate.toLocaleString("en-PH")}{" "}
+                      {formatPHPCurrency(room.discountedRate)}{" "}
                       <span className="line-through text-resort-cocoa/40 text-lg font-normal ml-1">
-                        ₱{room.regularRate.toLocaleString("en-PH")}
+                        {formatPHPCurrency(room.regularRate)}
                       </span>{" "}
                       <span className="text-sm font-normal text-[#c4a47c] uppercase tracking-widest font-sans">
                         / night
@@ -421,7 +423,7 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
                             {!isHydrated
                               ? "Select Dates"
                               : state.checkIn
-                                ? `${formatDate(state.checkIn)} — ${state.checkOut ? formatDate(state.checkOut) : "Select Departure"}`
+                                ? `${formatDate(state.checkIn)} â€” ${state.checkOut ? formatDate(state.checkOut) : "Select Departure"}`
                                 : "Select Dates"}
                           </span>
                         </div>
@@ -550,7 +552,7 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
                             <span className="text-xs font-bold text-resort-olive uppercase tracking-wider">
                               Number of Guests
                             </span>
-                            
+
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col">
                                 <span className="text-sm text-resort-cocoa font-medium">Adults</span>
@@ -669,7 +671,7 @@ export function RoomDetailPage({ room, allRooms = resort.rooms }: RoomDetailPage
 }
 
 export function RoomDetailPageById({ roomId }: { roomId: string }) {
-  const { rooms, loading } = useResortData();
+  const { rooms } = useResortData();
   const room = rooms.find((r) => r.id === roomId);
   if (!room) return null;
   return <RoomDetailPage room={room} allRooms={rooms} />;

@@ -3,15 +3,20 @@ import { Footer } from "@/components/layout/footer";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { RoomListingCard } from "@/components/ui/room-listing-card";
 import { BookingStrip } from "../../components/booking-strip";
-import { bookingReminderList, resort, siteImages } from "@/data/resort";
+import { resort, siteImages } from "@/data/resort";
 import Image from "next/image";
 import Link from "next/link";
 import { Coffee, Wifi, Waves, Martini, HeadphonesIcon, Snowflake } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
 import { getDynamicRooms } from "@/lib/resort-data";
+import { createClient } from "@/lib/supabase/server";
+import { getBookingReminderList } from "@/lib/booking-settings";
 
 export default async function RoomsPage() {
+  const supabase = await createClient();
+  const { data: settings } = await supabase.from("resort_settings").select("*").eq("id", 1).single();
   const dynamicRooms = await getDynamicRooms();
+  const bookingReminderList = getBookingReminderList(settings);
   return (
     <>
       <Header />
@@ -151,18 +156,7 @@ export default async function RoomsPage() {
             <div className="flex flex-col gap-10">
               {dynamicRooms.map((room, index) => (
                 <Reveal key={room.id} delay={index * 150}>
-                  <RoomListingCard
-                    title={room.name}
-                    category={room.category}
-                    description={room.shortDescription}
-                    capacity={room.capacityLabel}
-                    bedConfig={room.beds}
-                    regularPrice={room.regularRate}
-                    discountedPrice={room.discountedRate}
-                    imageUrl={room.image}
-                    href={room.detailsHref}
-                    amenities={room.amenities}
-                  />
+                  <RoomListingCard room={room} />
                 </Reveal>
               ))}
             </div>

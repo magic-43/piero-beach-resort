@@ -6,14 +6,16 @@ import { Reveal } from "@/components/ui/reveal";
 import { Footer } from "@/components/layout/footer";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { ReservationProgress } from "@/components/ui/reservation-progress";
-import { bookingReminderList, resort, siteImages } from "@/data/resort";
+import { resort, siteImages } from "@/data/resort";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
 import { useReservation } from "@/context/reservation-context";
+import { useResortData } from "@/hooks/useResortData";
 
 export default function ReserveDatesPage() {
   const { state, updateState, formatDate, nights, isHydrated } = useReservation();
+  const { bookingSettings, bookingReminders } = useResortData();
   const router = useRouter();
 
   const today = new Date();
@@ -273,7 +275,7 @@ export default function ReserveDatesPage() {
                     </div>
 
                     <p className="text-sm text-resort-cocoa/70 pb-6 border-b border-resort-cocoa/10">
-                      {nights > 0 ? `${nights} nights` : "Duration"} · {resort.stay.checkIn} check-in, {resort.stay.checkOut} check-out
+                      {nights > 0 ? `${nights} nights` : "Duration"} · {bookingSettings.checkIn} check-in, {bookingSettings.checkOut} check-out
                     </p>
 
                     <div className="flex flex-col space-y-4">
@@ -359,7 +361,7 @@ export default function ReserveDatesPage() {
                     </div>
 
                     <div className="pt-6 border-t border-resort-cocoa/10 space-y-2">
-                      {bookingReminderList.slice(0, 3).map((item) => (
+                      {bookingReminders.slice(0, 3).map((item) => (
                         <p key={item} className="text-xs text-resort-cocoa/60">
                           {item}
                         </p>

@@ -264,7 +264,7 @@ export default function SettingsForms({
               <h2 className="font-serif text-2xl text-[#132c4a]">Booking Details</h2>
             </div>
             
-            <form onSubmit={handleBookingSubmit} className="space-y-6 max-w-2xl opacity-75">
+            <form onSubmit={handleBookingSubmit} className="space-y-6 max-w-2xl">
               {bookingStatus.message && (
                 <div className={`p-4 text-sm rounded-lg ${bookingStatus.type === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}>
                   {bookingStatus.message}
@@ -274,24 +274,24 @@ export default function SettingsForms({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs text-resort-cocoa/70 mb-1">Extra Person Fee (₱)</label>
-                  <input type="number" step="0.01" name="extra_person_fee" defaultValue={initialSettings.extra_person_fee as number} disabled className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="number" step="0.01" name="extra_person_fee" defaultValue={initialSettings.extra_person_fee as number} className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs text-resort-cocoa/70 mb-1">Security Deposit (₱)</label>
-                  <input type="number" step="0.01" name="security_deposit" defaultValue={initialSettings.security_deposit as number} disabled className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="number" step="0.01" name="security_deposit" defaultValue={initialSettings.security_deposit as number} className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs text-resort-cocoa/70 mb-1">Check-in Time</label>
-                  <input type="text" name="check_in_time" defaultValue={(initialSettings.check_in_time as string) || ""} disabled placeholder="e.g. 2:00 PM" className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="text" name="check_in_time" defaultValue={(initialSettings.check_in_time as string) || ""} placeholder="e.g. 2:00 PM" className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs text-resort-cocoa/70 mb-1">Check-out Time</label>
-                  <input type="text" name="check_out_time" defaultValue={(initialSettings.check_out_time as string) || ""} disabled placeholder="e.g. 12:00 NN" className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="text" name="check_out_time" defaultValue={(initialSettings.check_out_time as string) || ""} placeholder="e.g. 12:00 NN" className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
               </div>
 
-              <button type="button" disabled className="px-6 py-2.5 bg-gray-300 text-gray-500 rounded-md text-sm cursor-not-allowed">
-                Save Booking Details
+              <button type="submit" disabled={bookingStatus.loading} className="px-6 py-2.5 bg-[#132c4a] text-white rounded-md text-sm hover:bg-[#1a3a61] disabled:opacity-50 transition-colors">
+                {bookingStatus.loading ? "Saving..." : "Save Booking Details"}
               </button>
             </form>
           </section>
@@ -359,7 +359,7 @@ export default function SettingsForms({
               <h2 className="font-serif text-2xl text-[#132c4a]">Site Details</h2>
             </div>
             
-            <form onSubmit={handleSiteDetailsSubmit} className="space-y-6 max-w-2xl opacity-75">
+            <form onSubmit={handleSiteDetailsSubmit} className="space-y-6 max-w-2xl">
               {siteDetailsStatus.message && (
                 <div className={`p-4 text-sm rounded-lg ${siteDetailsStatus.type === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}>
                   {siteDetailsStatus.message}
@@ -369,28 +369,28 @@ export default function SettingsForms({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs text-resort-cocoa/70 mb-1">Email Address</label>
-                  <input type="email" name="site_email" defaultValue={(initialSettings.site_email as string) || "pierobeachresortph@gmail.com"} disabled className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="email" name="site_email" defaultValue={(initialSettings.site_email as string) || "pierobeachresortph@gmail.com"} className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs text-resort-cocoa/70 mb-1">Phone Number</label>
-                  <input type="text" name="site_phone" defaultValue={(initialSettings.site_phone as string) || "+63 995 385 5517"} disabled className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="text" name="site_phone" defaultValue={(initialSettings.site_phone as string) || "+63 995 385 5517"} className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs text-resort-cocoa/70 mb-1">WhatsApp Number</label>
-                  <input type="text" name="site_whatsapp" defaultValue={(initialSettings.site_whatsapp as string) || "+63 955 318 2012"} disabled className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="text" name="site_whatsapp" defaultValue={(initialSettings.site_whatsapp as string) || "+63 955 318 2012"} className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-xs text-resort-cocoa/70 mb-1">Facebook Link</label>
-                  <input type="url" name="site_facebook" defaultValue={(initialSettings.site_facebook as string) || "https://www.facebook.com/"} disabled className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="url" name="site_facebook" defaultValue={(initialSettings.site_facebook as string) || "https://www.facebook.com/"} className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-xs text-resort-cocoa/70 mb-1">Google Maps Link</label>
-                  <input type="url" name="site_google_maps" defaultValue={(initialSettings.site_google_maps as string) || "https://maps.google.com/"} disabled className="w-full p-2.5 bg-gray-100 border border-resort-cocoa/10 rounded-md outline-none cursor-not-allowed text-resort-cocoa/60" />
+                  <input type="url" name="site_google_maps" defaultValue={(initialSettings.site_google_maps as string) || "https://maps.google.com/"} className="w-full p-2.5 bg-white border border-resort-cocoa/20 rounded-md focus:border-[#c4a47c] outline-none" />
                 </div>
               </div>
 
-              <button type="button" disabled className="px-6 py-2.5 bg-gray-300 text-gray-500 rounded-md text-sm cursor-not-allowed">
-                Save Site Details
+              <button type="submit" disabled={siteDetailsStatus.loading} className="px-6 py-2.5 bg-[#132c4a] text-white rounded-md text-sm hover:bg-[#1a3a61] disabled:opacity-50 transition-colors">
+                {siteDetailsStatus.loading ? "Saving..." : "Save Site Details"}
               </button>
             </form>
           </section>

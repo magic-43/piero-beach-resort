@@ -1,5 +1,9 @@
-import { RoomDetailPageById } from "@/components/room-detail-page";
+import { notFound } from "next/navigation";
+import { RoomDetailPage } from "@/components/room-detail-page";
+import { getDynamicRoomById, getDynamicRooms } from "@/lib/resort-data";
 
-export default function IbizaRoomPage() {
-  return <RoomDetailPageById roomId="ibiza-room" />;
+export default async function IbizaRoomPage() {
+  const [room, rooms] = await Promise.all([getDynamicRoomById("ibiza-room"), getDynamicRooms()]);
+  if (!room) notFound();
+  return <RoomDetailPage room={room} allRooms={rooms} />;
 }

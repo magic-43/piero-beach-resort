@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { ReservationProgress } from "@/components/ui/reservation-progress";
-import { bookingReminderList, resort, type ResortRoom } from "@/data/resort";
+import { resort, type ResortRoom } from "@/data/resort";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Users, Bed, Check } from "lucide-react";
@@ -15,7 +15,7 @@ import { useResortData } from "@/hooks/useResortData";
 export default function ReserveVillaPage() {
   const { state, updateState, nights, formatDate, formatCurrency, isHydrated } = useReservation();
   const router = useRouter();
-  const { rooms } = useResortData();
+  const { rooms, bookingReminders } = useResortData();
 
   useEffect(() => {
     if (isHydrated && (!state.checkIn || !state.checkOut)) {
@@ -87,7 +87,7 @@ export default function ReserveVillaPage() {
             <div className="mb-12 bg-resort-sand/20 border border-resort-cocoa/10 p-6 rounded-xl text-sm text-resort-cocoa/80">
               <h4 className="font-serif text-lg text-resort-cocoa mb-3">Booking Policies & Reminders</h4>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 list-disc list-inside">
-                {bookingReminderList.map((item) => (
+                {bookingReminders.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>

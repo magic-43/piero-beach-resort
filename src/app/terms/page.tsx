@@ -1,15 +1,21 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { FloatingActions } from "@/components/layout/floating-actions";
-import { bookingReminderList, resort } from "@/data/resort";
+import { resort } from "@/data/resort";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { getBookingReminderList, getDynamicTermsSections } from "@/lib/booking-settings";
 
 export const metadata = {
   title: "Terms & Conditions | Piero Beach Resort",
   description: "Read the booking and stay terms for Piero Beach Resort in Cabangan, Zambales.",
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const supabase = await createClient();
+  const { data: settings } = await supabase.from("resort_settings").select("*").eq("id", 1).single();
+  const bookingReminderList = getBookingReminderList(settings);
+  const termsSections = getDynamicTermsSections(settings);
   return (
     <>
       <Header />
@@ -47,7 +53,7 @@ export default function TermsPage() {
             </div>
 
             <div className="space-y-10">
-              {resort.termsSections.map((section) => (
+              {termsSections.map((section) => (
                 <div key={section.title} className="group">
                   <h2 className="font-serif text-2xl text-resort-cocoa mb-4 group-hover:text-resort-terracotta transition-colors">
                     {section.title}

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { formatPHPCurrency } from "@/lib/currency";
 
 interface AccommodationCardProps {
   title: string;
@@ -27,7 +28,7 @@ export function AccommodationCard({
   const priceLabel =
     price ??
     (typeof discountedPrice === "number"
-      ? `From ₱${discountedPrice.toLocaleString("en-PH")} / night`
+      ? `From ${formatPHPCurrency(discountedPrice)} / night`
       : `Good for ${capacity}`);
 
   return (
@@ -65,13 +66,13 @@ export function AccommodationCard({
             <div className="flex flex-col">
               {typeof regularPrice === "number" && (
                 <span className="text-xs text-resort-cocoa/40 line-through">
-                  ₱{regularPrice.toLocaleString("en-PH")}
+                  {formatPHPCurrency(regularPrice)}
                 </span>
               )}
               <span className="text-resort-cocoa font-medium text-sm">{priceLabel}</span>
             </div>
             <span className="text-resort-terracotta font-serif text-2xl transform group-hover:translate-x-1.5 transition-transform duration-300">
-              →
+              &rarr;
             </span>
           </div>
         </div>

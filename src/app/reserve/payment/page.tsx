@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { ReservationProgress } from "@/components/ui/reservation-progress";
-import { bookingReminderList, resort } from "@/data/resort";
+import { resort } from "@/data/resort";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { CreditCard, Wallet, Upload, CheckCircle2, Info, Loader2 } from "lucide-react";
@@ -21,22 +21,16 @@ export default function ReservePaymentPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
-  const { settings, loading: settingsLoading } = useResortData();
+  const { settings, bookingSettings, bookingReminders } = useResortData();
 
   const bankTransferEnabled = settings ? Boolean(settings.bank_transfer_enabled) : true;
   const gcashEnabled = settings ? Boolean(settings.gcash_enabled) : true;
-
-  useEffect(() => {
-    if (settings) {
-      if (!settings.bank_transfer_enabled && settings.gcash_enabled && paymentMethod === "bank_transfer") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPaymentMethod("gcash");
-      } else if (!settings.gcash_enabled && settings.bank_transfer_enabled && paymentMethod === "gcash") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPaymentMethod("bank_transfer");
-      }
-    }
-  }, [settings, paymentMethod]);
+  const activePaymentMethod =
+    !bankTransferEnabled && gcashEnabled && paymentMethod === "bank_transfer"
+      ? "gcash"
+      : !gcashEnabled && bankTransferEnabled && paymentMethod === "gcash"
+        ? "bank_transfer"
+        : paymentMethod;
 
   useEffect(() => {
     if (isHydrated) {
@@ -100,7 +94,7 @@ export default function ReservePaymentPage() {
       // 2. Submit payment proof
       const formData = new FormData();
       formData.append('proofFile', file);
-      formData.append('paymentMethod', paymentMethod);
+      formData.append('paymentMethod', activePaymentMethod);
       formData.append('amountClaimed', amountDueToday.toString());
 
       const paymentRes = await fetch(`/api/bookings/${activeRef}/payment-proof`, {
@@ -221,7 +215,7 @@ export default function ReservePaymentPage() {
                           type="button"
                           onClick={() => setPaymentMethod("bank_transfer")}
                           className={`rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
-                            paymentMethod === "bank_transfer"
+                            activePaymentMethod === "bank_transfer"
                               ? "bg-resort-cocoa text-resort-white"
                               : "text-resort-cocoa/65"
                           }`}
@@ -234,7 +228,7 @@ export default function ReservePaymentPage() {
                           type="button"
                           onClick={() => setPaymentMethod("gcash")}
                           className={`rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${
-                            paymentMethod === "gcash"
+                            activePaymentMethod === "gcash"
                               ? "bg-resort-cocoa text-resort-white"
                               : "text-resort-cocoa/65"
                           }`}
@@ -247,42 +241,42 @@ export default function ReservePaymentPage() {
 
                   <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {bankTransferEnabled && (
-                      <label className={`relative border-2 rounded-xl p-6 cursor-pointer bg-resort-white transition-colors ${paymentMethod === "bank_transfer" ? "border-resort-terracotta" : "border-transparent hover:border-resort-terracotta/50 shadow-sm"}`}>
+                      <label className={`relative border-2 rounded-xl p-6 cursor-pointer bg-resort-white transition-colors ${activePaymentMethod === "bank_transfer" ? "border-resort-terracotta" : "border-transparent hover:border-resort-terracotta/50 shadow-sm"}`}>
                         <input
                           type="radio"
                           name="paymentMethod"
                           className="absolute opacity-0"
-                          checked={paymentMethod === "bank_transfer"}
+                          checked={activePaymentMethod === "bank_transfer"}
                           onChange={() => setPaymentMethod("bank_transfer")}
                         />
                         <div className="flex items-start space-x-4">
-                          <CreditCard className={`w-6 h-6 ${paymentMethod === "bank_transfer" ? "text-resort-terracotta" : "text-resort-cocoa/50"}`} />
+                          <CreditCard className={`w-6 h-6 ${activePaymentMethod === "bank_transfer" ? "text-resort-terracotta" : "text-resort-cocoa/50"}`} />
                           <div>
                             <p className="font-bold text-resort-cocoa mb-1">Bank Transfer</p>
                             <p className="text-sm text-resort-cocoa/70">Transfer using the bank details provided by the resort</p>
                           </div>
                         </div>
-                        {paymentMethod === "bank_transfer" && <CheckCircle2 className="absolute top-6 right-6 w-5 h-5 text-resort-terracotta" />}
+                        {activePaymentMethod === "bank_transfer" && <CheckCircle2 className="absolute top-6 right-6 w-5 h-5 text-resort-terracotta" />}
                       </label>
                     )}
 
                     {gcashEnabled && (
-                      <label className={`relative border-2 rounded-xl p-6 cursor-pointer bg-resort-white transition-colors ${paymentMethod === "gcash" ? "border-resort-terracotta" : "border-transparent hover:border-resort-terracotta/50 shadow-sm"}`}>
+                      <label className={`relative border-2 rounded-xl p-6 cursor-pointer bg-resort-white transition-colors ${activePaymentMethod === "gcash" ? "border-resort-terracotta" : "border-transparent hover:border-resort-terracotta/50 shadow-sm"}`}>
                         <input
                           type="radio"
                           name="paymentMethod"
                           className="absolute opacity-0"
-                          checked={paymentMethod === "gcash"}
+                          checked={activePaymentMethod === "gcash"}
                           onChange={() => setPaymentMethod("gcash")}
                         />
                         <div className="flex items-start space-x-4">
-                          <Wallet className={`w-6 h-6 ${paymentMethod === "gcash" ? "text-resort-terracotta" : "text-resort-cocoa/50"}`} />
+                          <Wallet className={`w-6 h-6 ${activePaymentMethod === "gcash" ? "text-resort-terracotta" : "text-resort-cocoa/50"}`} />
                           <div>
                             <p className="font-bold text-resort-cocoa mb-1">GCash</p>
                             <p className="text-sm text-resort-cocoa/70">Pay via GCash app</p>
                           </div>
                         </div>
-                        {paymentMethod === "gcash" && <CheckCircle2 className="absolute top-6 right-6 w-5 h-5 text-resort-terracotta" />}
+                        {activePaymentMethod === "gcash" && <CheckCircle2 className="absolute top-6 right-6 w-5 h-5 text-resort-terracotta" />}
                       </label>
                     )}
                   </div>
@@ -290,10 +284,10 @@ export default function ReservePaymentPage() {
 
                 <div className="bg-resort-white p-6 md:p-8 rounded-xl shadow-sm border border-resort-cocoa/5">
                   <h3 className="font-bold text-resort-cocoa mb-4 uppercase tracking-wide text-sm">
-                    {paymentMethod === "bank_transfer" ? "Bank Transfer Details" : "GCash Details"}
+                    {activePaymentMethod === "bank_transfer" ? "Bank Transfer Details" : "GCash Details"}
                   </h3>
                   <p className="text-sm text-resort-cocoa/60 mb-4">{resort.payment.note}</p>
-                  {paymentMethod === "bank_transfer" ? (
+                  {activePaymentMethod === "bank_transfer" ? (
                     <div className="space-y-3 text-resort-cocoa/80 text-sm">
                       <div className="flex justify-between border-b border-resort-cocoa/10 pb-2">
                         <span>Bank Name:</span>
@@ -430,12 +424,12 @@ export default function ReservePaymentPage() {
                         <div>
                           <p className="text-xs uppercase tracking-widest text-resort-cocoa/50 font-bold mb-1">Check-in</p>
                           <p className="font-medium text-resort-cocoa">{formatDate(state.checkIn)}</p>
-                          <p className="text-sm text-resort-cocoa/60">From {resort.stay.checkIn}</p>
+                          <p className="text-sm text-resort-cocoa/60">From {bookingSettings.checkIn}</p>
                         </div>
                         <div>
                           <p className="text-xs uppercase tracking-widest text-resort-cocoa/50 font-bold mb-1">Check-out</p>
                           <p className="font-medium text-resort-cocoa">{formatDate(state.checkOut)}</p>
-                          <p className="text-sm text-resort-cocoa/60">Until {resort.stay.checkOut}</p>
+                          <p className="text-sm text-resort-cocoa/60">Until {bookingSettings.checkOut}</p>
                         </div>
                       </div>
 
@@ -467,7 +461,7 @@ export default function ReservePaymentPage() {
                 <div className="mt-6 flex items-start space-x-3 text-resort-cocoa/60 text-sm">
                   <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <p>
-                    Your reservation is currently pending. Once your payment submission is received, the resort team will review it. {bookingReminderList[4]}
+                    Your reservation is currently pending. Once your payment submission is received, the resort team will review it. {bookingReminders[4]}
                   </p>
                 </div>
               </div>

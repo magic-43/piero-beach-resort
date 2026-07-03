@@ -60,7 +60,7 @@ const ReservationContext = createContext<ReservationContextType | undefined>(und
 export function ReservationProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ReservationState>(getInitialState());
   const [isHydrated, setIsHydrated] = useState(false);
-  const { rooms } = useResortData();
+  const { rooms, bookingSettings } = useResortData();
 
   useEffect(() => {
     try {
@@ -99,12 +99,24 @@ export function ReservationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (state.selectedVilla && rooms && rooms.length > 0) {
       const updatedVilla = rooms.find(r => r.id === state.selectedVilla?.id);
-      if (updatedVilla && (updatedVilla.discountedRate !== state.selectedVilla.discountedRate || updatedVilla.regularRate !== state.selectedVilla.regularRate)) {
+      if (
+        updatedVilla &&
+        (
+          updatedVilla.name !== state.selectedVilla.name ||
+          updatedVilla.image !== state.selectedVilla.image ||
+          updatedVilla.capacityLabel !== state.selectedVilla.capacityLabel ||
+          updatedVilla.maxGuests !== state.selectedVilla.maxGuests ||
+          updatedVilla.breakfastIncluded !== state.selectedVilla.breakfastIncluded ||
+          updatedVilla.extraGuestAllowance !== state.selectedVilla.extraGuestAllowance ||
+          updatedVilla.discountedRate !== state.selectedVilla.discountedRate ||
+          updatedVilla.regularRate !== state.selectedVilla.regularRate
+        )
+      ) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setState((prev) => ({ ...prev, selectedVilla: updatedVilla }));
       }
     }
-  }, [rooms, state.selectedVilla?.id]);
+  }, [rooms, state.selectedVilla]);
 
   const updateState = (updates: Partial<ReservationState>) => {
     setState((prev) => ({ ...prev, ...updates }));
@@ -136,7 +148,7 @@ export function ReservationProvider({ children }: { children: ReactNode }) {
     
     const baseCapacity = state.selectedVilla.maxGuests - state.selectedVilla.extraGuestAllowance;
     const extraAdultsCount = Math.max(0, state.adultGuests - baseCapacity);
-    extraAdultsCost = extraAdultsCount * 1300 * nights;
+    extraAdultsCost = extraAdultsCount * bookingSettings.extraPersonFee * nights;
   }
   
   const totalPrice = basePrice + extraAdultsCost;

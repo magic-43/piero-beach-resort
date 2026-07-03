@@ -17,8 +17,6 @@ export function AdminDateRangePicker({ checkInDate, checkOutDate, onChange }: Ad
     return new Date(checkIn.getFullYear(), checkIn.getMonth(), 1);
   });
 
-  const hasDates = Boolean(checkInDate && checkOutDate);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
