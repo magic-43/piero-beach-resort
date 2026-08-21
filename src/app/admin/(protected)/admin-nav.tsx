@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bed, Settings, LogOut, FileText } from "lucide-react";
+import { Home, Bed, Settings, LogOut, FileText, CreditCard } from "lucide-react";
 import { adminLogout } from "@/lib/admin/actions";
 
 export function AdminSidebar() {
@@ -12,6 +12,7 @@ export function AdminSidebar() {
     { label: "Home", href: "/admin", icon: Home },
     { label: "Rooms", href: "/admin/rooms", icon: Bed },
     { label: "Manual Confirmation", href: "/admin/manual-confirmation", icon: FileText },
+    { label: "Payment Poster", href: "/admin/payment-poster", icon: CreditCard },
     { label: "Settings", href: "/admin/settings", icon: Settings },
   ];
 
@@ -50,6 +51,7 @@ export function AdminBottomNav() {
     { label: "Home", href: "/admin", icon: Home },
     { label: "Rooms", href: "/admin/rooms", icon: Bed },
     { label: "Manual Conf", href: "/admin/manual-confirmation", icon: FileText },
+    { label: "Poster", href: "/admin/payment-poster", icon: CreditCard },
   ];
 
   return (
@@ -91,6 +93,7 @@ export function AdminPageHeader() {
   else if (pathname.startsWith("/admin/rooms")) pageTitle = "Rooms";
   else if (pathname.startsWith("/admin/manual-confirmation")) pageTitle = "Manual Confirmation";
   else if (pathname.startsWith("/admin/settings")) pageTitle = "Settings";
+  else if (pathname.startsWith("/admin/payment-poster")) pageTitle = "Payment Poster";
   else if (pathname.startsWith("/admin/payments")) pageTitle = "Payments";
 
   return (
@@ -108,6 +111,7 @@ export function AdminMobileHeader() {
   else if (pathname.startsWith("/admin/rooms")) pageTitle = "Rooms";
   else if (pathname.startsWith("/admin/manual-confirmation")) pageTitle = "Manual Confirmation";
   else if (pathname.startsWith("/admin/settings")) pageTitle = "Settings";
+  else if (pathname.startsWith("/admin/payment-poster")) pageTitle = "Payment Poster";
   else if (pathname.startsWith("/admin/payments")) pageTitle = "Payments";
 
   return (

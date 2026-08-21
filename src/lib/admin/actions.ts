@@ -281,3 +281,78 @@ export async function updateRoom(data: UpdateRoomPayload) {
     return { error: "An unexpected error occurred." };
   }
 }
+
+/**
+ * Payment Poster Settings
+ * Updates the payment_poster_settings table for the payment poster generator.
+ * Uses insert with ignoreDuplicates=false and onConflict via raw SQL approach.
+ * For Supabase JS v2, we use insert() which supports upsert via PostgREST.
+ */
+export async function updatePaymentPosterSettings(data: {
+  hotelSlug: string;
+  hotelName: string;
+  address: string;
+  contactNumber: string;
+  email: string;
+  logoUrl?: string;
+  gcashEntries: Array<{ number: string; name: string }>;
+  bpiAccountName: string;
+  bpiAccountNumber: string;
+  notes: string[];
+}) {
+  try {
+    await requireAdmin();
+    const supabase = createAdminClient();
+
+    // Use insert with upsert behavior via PostgREST
+    // The hotel_slug column has a unique constraint, so insert will fail on conflict
+    // We handle this by first trying to update, then inserting if no rows exist
+    const { error } = await supabase
+      .from("payment_poster_settings")
+      .insert({
+        hotel_slug: data.hotelSlug,
+        hotel_name: data.hotelName,
+        address: data.address,
+        contact_number: data.contactNumber,
+        email: data.email,
+        logo_url: data.logoUrl,
+        gcash_entries: data.gcashEntries,
+        bpi_account_name: data.bpiAccountName,
+        bpi_account_number: data.bpiAccountNumber,
+        notes: data.notes,
+        updated_at: new Date().toISOString(),
+      })
+      .select();
+
+    if (error) {
+      // On conflict (duplicate key), do an update instead
+      const { error: updateError } = await supabase
+        .from("payment_poster_settings")
+        .update({
+          hotel_name: data.hotelName,
+          address: data.address,
+          contact_number: data.contactNumber,
+          email: data.email,
+          logo_url: data.logoUrl,
+          gcash_entries: data.gcashEntries,
+          bpi_account_name: data.bpiAccountName,
+          bpi_account_number: data.bpiAccountNumber,
+          notes: data.notes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("hotel_slug", data.hotelSlug)
+        .select();
+
+      if (updateError) {
+        console.error("Payment poster settings update error:", updateError);
+        return { error: "Failed to update payment poster settings." };
+      }
+    }
+
+    revalidatePath("/admin/payment-poster");
+    return { success: true };
+  } catch (err: unknown) {
+    if (err instanceof Error) return { error: err.message };
+    return { error: "An unexpected error occurred." };
+  }
+}
