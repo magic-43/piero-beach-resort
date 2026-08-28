@@ -131,7 +131,7 @@ INSERT INTO rooms (
   true, 'cielo', 'Cabin',
   'A cozy mountain retreat for two. Rustic A-frame charm, queen-size bed, fan room. No extra guests — purely private. Shared comfort room.',
   'Cozy retreat for 2. Fan room. Shared CR. No extra guests.',
-  '', ARRAY[]::text[],
+  '/images/cielo/mini-cabin/photo_1_2026-08-26_10-08-37.jpg', ARRAY['/images/cielo/mini-cabin/photo_1_2026-08-26_10-08-37.jpg', '/images/cielo/mini-cabin/photo_2_2026-08-26_10-08-37.jpg', '/images/cielo/mini-cabin/photo_3_2026-08-26_10-08-37.jpg', '/images/cielo/mini-cabin/photo_4_2026-08-26_10-08-37.jpg']::text[],
   '1 Queen-size Bed', 'Good for 2 guests',
   ARRAY['1 Queen-size Bed','Fan Room','Shared Comfort Room','Free Breakfast for 2','Free Parking'],
   'Intimate cabin', 'Highland mountain view'
@@ -145,7 +145,7 @@ INSERT INTO rooms (
   true, 'cielo', 'Cabin',
   'A highland couple''s cabin with a private veranda facing the rolling mountains of Tanay. Fan or AC option. Shared comfort room. Up to 2 extra guests.',
   'Private veranda, overlooking view. Fan or AC. Shared CR. Up to 2 extra guests.',
-  '', ARRAY[]::text[],
+  '/images/cielo/regular-cabin/photo_1_2026-08-26_10-16-44.jpg', ARRAY['/images/cielo/regular-cabin/photo_1_2026-08-26_10-16-44.jpg', '/images/cielo/regular-cabin/photo_2_2026-08-26_10-16-44.jpg', '/images/cielo/regular-cabin/photo_3_2026-08-26_10-16-44.jpg']::text[],
   '1 Queen-size Bed', 'Good for 2 guests',
   ARRAY['1 Queen-size Bed','Fan or AC Room','Private Veranda','Overlooking Mountain View','Shared Comfort Room','Free Breakfast for 2','Up to 2 Extra Guests','Free Parking'],
   'Cozy cabin with veranda', 'Panoramic mountain view'
@@ -159,7 +159,7 @@ INSERT INTO rooms (
   true, 'cielo', 'Cabin',
   'The best choice for families and groups. Two queen beds, own private comfort room, AC option, and a veranda with sweeping mountain views.',
   'Spacious 4-guest cabin. Own private CR. Fan or AC. Veranda with mountain view.',
-  '', ARRAY[]::text[],
+  '/images/cielo/family-cabin/photo_1_2026-08-26_10-17-14.jpg', ARRAY['/images/cielo/family-cabin/photo_1_2026-08-26_10-17-14.jpg', '/images/cielo/family-cabin/photo_2_2026-08-26_10-17-14.jpg', '/images/cielo/family-cabin/photo_3_2026-08-26_10-17-14.jpg', '/images/cielo/family-cabin/photo_4_2026-08-26_10-17-14.jpg', '/images/cielo/family-cabin/photo_5_2026-08-26_10-17-14.jpg']::text[],
   '2 Queen-size Beds', 'Good for 4 guests',
   ARRAY['2 Queen-size Beds','Fan or AC Room','Own Private Comfort Room','Overlooking Veranda','Mountain View','Free Breakfast for 4','Up to 2 Extra Guests','Free Parking'],
   'Spacious family cabin', 'Sweeping mountain panorama'
@@ -173,7 +173,7 @@ INSERT INTO rooms (
   true, 'cielo', 'Room',
   'A comfortable private room with own comfort room (with sink), veranda, and mountain views. Fan or AC. Great for couples wanting more privacy.',
   'Own CR with sink. Private veranda. Fan or AC. Overlooking view.',
-  '', ARRAY[]::text[],
+  '/images/cielo/holiday-room-1/photo_1_2026-08-26_10-18-23.jpg', ARRAY['/images/cielo/holiday-room-1/photo_1_2026-08-26_10-18-23.jpg', '/images/cielo/holiday-room-1/photo_2_2026-08-26_10-18-23.jpg', '/images/cielo/holiday-room-1/photo_3_2026-08-26_10-18-23.jpg', '/images/cielo/holiday-room-1/photo_4_2026-08-26_10-18-23.jpg', '/images/cielo/holiday-room-1/photo_5_2026-08-26_10-18-23.jpg']::text[],
   '1 Queen-size Bed', 'Good for 2 guests',
   ARRAY['1 Queen-size Bed','Fan or AC Room','Own Comfort Room (with sink)','Private Veranda','Overlooking Mountain View','Free Breakfast for 2','Up to 2 Extra Guests','Free Parking'],
   'Private room with veranda', 'Mountain view'
@@ -187,7 +187,7 @@ INSERT INTO rooms (
   true, 'cielo', 'Room',
   'Fun double-deck bunk beds, own private comfort room, and a veranda with mountain views. Fan or AC. Perfect for friends or siblings.',
   'Double deck beds. Own CR. Private veranda. Fan or AC.',
-  '', ARRAY[]::text[],
+  '/images/cielo/holiday-room-2-3/photo_1_2026-08-26_10-19-35.jpg', ARRAY['/images/cielo/holiday-room-2-3/photo_1_2026-08-26_10-19-35.jpg', '/images/cielo/holiday-room-2-3/photo_2_2026-08-26_10-19-35.jpg', '/images/cielo/holiday-room-2-3/photo_3_2026-08-26_10-19-35.jpg', '/images/cielo/holiday-room-2-3/photo_4_2026-08-26_10-19-35.jpg', '/images/cielo/holiday-room-2-3/photo_5_2026-08-26_10-19-35.jpg', '/images/cielo/holiday-room-2-3/photo_6_2026-08-26_10-19-35.jpg', '/images/cielo/holiday-room-2-3/photo_7_2026-08-26_10-19-35.jpg']::text[],
   '1 Double Deck (bunk bed)', 'Good for 2 guests',
   ARRAY['1 Double Deck Bed','Fan or AC Room','Own Private Comfort Room','Overlooking Veranda','Mountain View','Free Breakfast for 2','Up to 2 Extra Guests','Free Parking'],
   'Fun bunk-style room', 'Mountain overlook'
@@ -201,12 +201,20 @@ INSERT INTO rooms (
   true, 'cielo', 'Cabin',
   'The crown jewel of Cielo Alto Place. Three queen beds plus an attic loft under iconic A-frame wooden beam ceilings. Sleeps up to 8. Own private CR, veranda, mountain views. Fan or AC.',
   'Crown jewel. 3 queen beds + attic loft. Sleeps up to 8. Own CR. Fan or AC.',
-  '', ARRAY[]::text[],
+  '/images/cielo/loft-cabin/photo_1_2026-08-26_10-20-21.jpg', ARRAY['/images/cielo/loft-cabin/photo_1_2026-08-26_10-20-21.jpg', '/images/cielo/loft-cabin/photo_2_2026-08-26_10-20-21.jpg', '/images/cielo/loft-cabin/photo_3_2026-08-26_10-20-21.jpg', '/images/cielo/loft-cabin/photo_4_2026-08-26_10-20-21.jpg', '/images/cielo/loft-cabin/photo_5_2026-08-26_10-20-21.jpg', '/images/cielo/loft-cabin/photo_6_2026-08-26_10-20-21.jpg', '/images/cielo/loft-cabin/photo_7_2026-08-26_10-20-21.jpg']::text[],
   '3 Queen-size Beds + Attic Loft', 'Good for 4 guests (up to 8)',
   ARRAY['3 Queen-size Beds + Attic Loft','Fan or AC Room','Own Private Comfort Room','Private Veranda','Panoramic Mountain View','Free Breakfast for 4','Up to 4 Extra Guests','Iconic A-Frame Architecture','Free Parking'],
   'Large loft-style A-frame cabin', 'Panoramic mountain and highland view'
 )
 ON CONFLICT (slug) DO NOTHING;
+
+-- Backfill room images for existing Cielo rows if empty
+UPDATE rooms SET image = '/images/cielo/mini-cabin/photo_1_2026-08-26_10-08-37.jpg' WHERE slug = 'mini-cabin' AND (image IS NULL OR image = '');
+UPDATE rooms SET image = '/images/cielo/regular-cabin/photo_1_2026-08-26_10-16-44.jpg' WHERE slug = 'regular-cabin' AND (image IS NULL OR image = '');
+UPDATE rooms SET image = '/images/cielo/family-cabin/photo_1_2026-08-26_10-17-14.jpg' WHERE slug = 'family-cabin' AND (image IS NULL OR image = '');
+UPDATE rooms SET image = '/images/cielo/holiday-room-1/photo_1_2026-08-26_10-18-23.jpg' WHERE slug = 'holiday-room-1' AND (image IS NULL OR image = '');
+UPDATE rooms SET image = '/images/cielo/holiday-room-2-3/photo_1_2026-08-26_10-19-35.jpg' WHERE slug = 'holiday-room-2-3' AND (image IS NULL OR image = '');
+UPDATE rooms SET image = '/images/cielo/loft-cabin/photo_1_2026-08-26_10-20-21.jpg' WHERE slug = 'loft-cabin' AND (image IS NULL OR image = '');
 
 -- ============================================================
 -- 8. RLS: rooms policy still works (is_active = true is public)

@@ -6,6 +6,15 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+const CIELO_ROOM_FALLBACKS: Record<string, string> = {
+  "mini-cabin": "/images/cielo/mini-cabin/photo_1_2026-08-26_10-08-37.jpg",
+  "regular-cabin": "/images/cielo/regular-cabin/photo_1_2026-08-26_10-16-44.jpg",
+  "family-cabin": "/images/cielo/family-cabin/photo_1_2026-08-26_10-17-14.jpg",
+  "holiday-room-1": "/images/cielo/holiday-room-1/photo_1_2026-08-26_10-18-23.jpg",
+  "holiday-room-2-3": "/images/cielo/holiday-room-2-3/photo_1_2026-08-26_10-19-35.jpg",
+  "loft-cabin": "/images/cielo/loft-cabin/photo_1_2026-08-26_10-20-21.jpg",
+};
+
 export default async function CieloRoomsPage() {
   await requireAdmin();
   const supabase = await createAdminClient();
@@ -24,7 +33,7 @@ export default async function CieloRoomsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {rooms?.map((room) => {
-          const imageUrl = room.image;
+          const imageUrl = room.image || CIELO_ROOM_FALLBACKS[room.slug] || "";
 
           return (
             <div

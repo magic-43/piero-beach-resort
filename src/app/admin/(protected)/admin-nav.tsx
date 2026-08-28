@@ -32,12 +32,18 @@ export function AdminSidebar() {
   const base = property ? `/admin/${property}` : "/admin";
 
   const navItems = property
-    ? [
-        { label: "Dashboard", href: base, icon: Home },
-        { label: "Rooms", href: `${base}/rooms`, icon: Bed },
-        { label: "Manual Confirmation", href: `${base}/manual-confirmation`, icon: FileText },
-        { label: "Settings", href: `${base}/settings`, icon: Settings },
-      ]
+    ? property === "cielo"
+      ? [
+          { label: "Dashboard", href: base, icon: Home },
+          { label: "Rooms", href: `${base}/rooms`, icon: Bed },
+          { label: "Settings", href: `${base}/settings`, icon: Settings },
+        ]
+      : [
+          { label: "Dashboard", href: base, icon: Home },
+          { label: "Rooms", href: `${base}/rooms`, icon: Bed },
+          { label: "Manual Confirmation", href: `${base}/manual-confirmation`, icon: FileText },
+          { label: "Settings", href: `${base}/settings`, icon: Settings },
+        ]
     : [];
 
   return (
@@ -82,11 +88,18 @@ export function AdminBottomNav() {
 
   if (!property) return null;
 
-  const navItems = [
-    { label: "Home", href: base, icon: Home },
-    { label: "Rooms", href: `${base}/rooms`, icon: Bed },
-    { label: "Manual Conf", href: `${base}/manual-confirmation`, icon: FileText },
-  ];
+  const navItems =
+    property === "cielo"
+      ? [
+          { label: "Home", href: base, icon: Home },
+          { label: "Rooms", href: `${base}/rooms`, icon: Bed },
+          { label: "Settings", href: `${base}/settings`, icon: Settings },
+        ]
+      : [
+          { label: "Home", href: base, icon: Home },
+          { label: "Rooms", href: `${base}/rooms`, icon: Bed },
+          { label: "Manual Conf", href: `${base}/manual-confirmation`, icon: FileText },
+        ];
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-resort-white border-t border-resort-cocoa/10 flex justify-around items-center h-[72px] px-2 z-50 safe-area-bottom pb-env-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)] print:hidden">

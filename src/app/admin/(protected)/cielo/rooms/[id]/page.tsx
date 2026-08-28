@@ -5,6 +5,15 @@ import { RoomEditForm } from "@/app/admin/(protected)/rooms/[id]/room-edit-form"
 
 export const dynamic = "force-dynamic";
 
+const CIELO_ROOM_FALLBACKS: Record<string, string> = {
+  "mini-cabin": "/images/cielo/mini-cabin/photo_1_2026-08-26_10-08-37.jpg",
+  "regular-cabin": "/images/cielo/regular-cabin/photo_1_2026-08-26_10-16-44.jpg",
+  "family-cabin": "/images/cielo/family-cabin/photo_1_2026-08-26_10-17-14.jpg",
+  "holiday-room-1": "/images/cielo/holiday-room-1/photo_1_2026-08-26_10-18-23.jpg",
+  "holiday-room-2-3": "/images/cielo/holiday-room-2-3/photo_1_2026-08-26_10-19-35.jpg",
+  "loft-cabin": "/images/cielo/loft-cabin/photo_1_2026-08-26_10-20-21.jpg",
+};
+
 export default async function CieloRoomEditPage({
   params,
 }: {
@@ -23,6 +32,8 @@ export default async function CieloRoomEditPage({
 
   if (!room) notFound();
 
+  const fallbackImage = room.slug ? CIELO_ROOM_FALLBACKS[room.slug] || "" : "";
+
   return (
     <RoomEditForm
       room={{
@@ -32,7 +43,7 @@ export default async function CieloRoomEditPage({
         category: room.category || "Cabin",
         description: room.description || "",
         short_description: room.short_description || "",
-        image: room.image || "",
+        image: room.image || fallbackImage,
         gallery: room.gallery || [],
         beds: room.beds || "",
         standard_guests: room.standard_guests ?? 2,
