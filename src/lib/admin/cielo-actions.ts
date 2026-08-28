@@ -24,7 +24,7 @@ export async function cieloUpdatePaymentSettings(data: Record<string, unknown>) 
         gcash_name: data.gcash_name,
         gcash_number: data.gcash_number,
       })
-      .eq("id", CIELO_SETTINGS_ID);
+      .or("id.eq.2,property_id.eq.cielo");
 
     if (error) return { error: "Failed to update payment settings." };
     revalidatePath("/admin/cielo/settings");
@@ -50,7 +50,7 @@ export async function cieloUpdateBookingSettings(data: Record<string, unknown>) 
         check_in_time: data.check_in_time,
         check_out_time: data.check_out_time,
       })
-      .eq("id", CIELO_SETTINGS_ID);
+      .or("id.eq.2,property_id.eq.cielo");
 
     if (error) return { error: "Failed to update booking settings." };
     revalidatePath("/admin/cielo/settings");
@@ -83,7 +83,7 @@ export async function cieloUpdateSiteDetails(data: {
         site_facebook: data.site_facebook,
         site_google_maps: data.site_google_maps,
       })
-      .eq("id", CIELO_SETTINGS_ID);
+      .or("id.eq.2,property_id.eq.cielo");
 
     if (error) return { error: "Failed to update site details." };
     revalidatePath("/admin/cielo/settings");

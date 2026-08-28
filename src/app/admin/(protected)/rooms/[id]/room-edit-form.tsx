@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ImagePlus, Loader2, Plus, X } from "lucide-react";
 import { updateRoom } from "@/lib/admin/actions";
+import { cieloUpdateRoom } from "@/lib/admin/cielo-actions";
 import { formatPHPCurrency } from "@/lib/currency";
 
 type RoomEditFormProps = {
@@ -28,10 +29,14 @@ type RoomEditFormProps = {
     view: string;
     regular_rate: number;
     discounted_rate: number;
+    has_fan?: boolean;
+    has_ac?: boolean;
+    ac_surcharge?: number;
     is_active: boolean;
     details_href: string;
   };
   globalDiscountPercentage: number;
+  property?: "piero" | "cielo";
 };
 
 function normalizeList(items: string[]) {
@@ -65,7 +70,7 @@ function buildSnapshot(form: FormState) {
   });
 }
 
-export function RoomEditForm({ room, globalDiscountPercentage }: RoomEditFormProps) {
+export function RoomEditForm({ room, globalDiscountPercentage, property = "piero" }: RoomEditFormProps) {
   const router = useRouter();
   const [status, setStatus] = useState<{ loading: boolean; message: string; type: "success" | "error" | "" }>({
     loading: false,
@@ -141,9 +146,13 @@ export function RoomEditForm({ room, globalDiscountPercentage }: RoomEditFormPro
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const target = event.target;
-    const value = target instanceof HTMLInputElement && target.type === "checkbox" ? target.checked : target.value;
-    setForm((prev) => ({ ...prev, [target.name]: value }));
+    const { name, value, type } = event.target;
+    const checked = (event.target as HTMLInputElement).checked;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleAmenityAdd = () => {
@@ -195,6 +204,7 @@ export function RoomEditForm({ room, globalDiscountPercentage }: RoomEditFormPro
       });
 
       const data = await response.json();
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to upload image.");
       }
@@ -228,7 +238,7 @@ export function RoomEditForm({ room, globalDiscountPercentage }: RoomEditFormPro
 
     const capacityLabel = form.capacity_label.trim() || `Good for ${standardGuests} guest${standardGuests === 1 ? "" : "s"}`;
 
-    const result = await updateRoom({
+    const payload = {
       id: room.id,
       name: form.name,
       category: form.category,
@@ -245,8 +255,15 @@ export function RoomEditForm({ room, globalDiscountPercentage }: RoomEditFormPro
       size: form.size,
       view: form.view,
       regular_rate: Number(form.regular_rate),
+      ac_surcharge: room.ac_surcharge ?? 0,
+      has_fan: room.has_fan ?? true,
+      has_ac: room.has_ac ?? false,
       is_active: form.is_active,
-    });
+    };
+
+    const result = property === "cielo"
+      ? await cieloUpdateRoom(payload)
+      : await updateRoom(payload);
 
     if (result?.error) {
       setStatus({ loading: false, message: result.error, type: "error" });
@@ -259,6 +276,8 @@ export function RoomEditForm({ room, globalDiscountPercentage }: RoomEditFormPro
     setStatus({ loading: false, message: "Room updated successfully.", type: "success" });
     router.refresh();
   };
+
+  const backHref = property === "cielo" ? "/admin/cielo/rooms" : "/admin/piero/rooms";
 
   return (
     <div className="space-y-8 overflow-x-hidden pb-24 sm:pb-8">
@@ -279,7 +298,7 @@ export function RoomEditForm({ room, globalDiscountPercentage }: RoomEditFormPro
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <Link
-            href="/admin/rooms"
+            href={backHref}
             className="inline-flex items-center text-xs font-bold uppercase tracking-[0.2em] text-resort-cocoa/60 hover:text-[#132c4a] transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

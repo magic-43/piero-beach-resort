@@ -55,11 +55,13 @@ export default async function AdminPaymentDetailPage({
     downloadUrl = dlUrlData?.signedUrl;
   }
 
+  const backHref = booking.property_id === "cielo" ? "/admin/cielo" : "/admin/piero";
+
   return (
     <div className="space-y-6">
-      <Link href="/admin" className="inline-flex items-center text-sm text-resort-cocoa/60 hover:text-resort-cocoa transition-colors">
+      <Link href={backHref} className="inline-flex items-center text-sm text-resort-cocoa/60 hover:text-resort-cocoa transition-colors">
         <ArrowLeft className="w-4 h-4 mr-1" />
-        Back to Home
+        Back to Dashboard
       </Link>
 
       {/* Content */}

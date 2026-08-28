@@ -59,6 +59,7 @@ export default async function CieloRoomEditPage({
         details_href: `/rooms/${room.slug || room.id}`,
       }}
       globalDiscountPercentage={0}  // No discount model for Cielo
+      property="cielo"
     />
   );
 }

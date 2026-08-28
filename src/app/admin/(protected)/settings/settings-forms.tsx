@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { updatePaymentSettings, updateBookingSettings, updateDiscountSetting, updateSiteDetails } from "@/lib/admin/actions";
-
+import { cieloUpdatePaymentSettings, cieloUpdateBookingSettings, cieloUpdateSiteDetails } from "@/lib/admin/cielo-actions";
 
 export default function SettingsForms({ 
   initialSettings, 
-  rooms 
+  rooms,
+  property = "piero",
 }: { 
   initialSettings: Record<string, unknown>, 
-  rooms: { id: string, name: string, discounted_rate: number, regular_rate: number }[] 
+  rooms: { id: string, name: string, discounted_rate: number, regular_rate: number }[],
+  property?: "piero" | "cielo",
 }) {
   const initialDiscount = (initialSettings.global_discount_percentage as number) || 0;
   const [discount, setDiscount] = useState(initialDiscount);
@@ -43,7 +45,10 @@ export default function SettingsForms({
     };
 
     try {
-      const result = await updatePaymentSettings(data);
+      const result = property === "cielo" 
+        ? await cieloUpdatePaymentSettings(data)
+        : await updatePaymentSettings(data);
+
       if (result?.error) throw new Error(result.error);
       setPaymentStatus({ loading: false, message: "Payment settings saved.", type: "success" });
     } catch (err: unknown) {
@@ -61,13 +66,16 @@ export default function SettingsForms({
     const formData = new FormData(e.currentTarget);
     const data = {
       extra_person_fee: parseFloat(formData.get("extra_person_fee") as string),
-      security_deposit: parseFloat(formData.get("security_deposit") as string),
+      security_deposit: parseFloat(formData.get("security_deposit") as string) || 0,
       check_in_time: formData.get("check_in_time"),
       check_out_time: formData.get("check_out_time"),
     };
 
     try {
-      const result = await updateBookingSettings(data);
+      const result = property === "cielo"
+        ? await cieloUpdateBookingSettings(data)
+        : await updateBookingSettings(data);
+
       if (result?.error) throw new Error(result.error);
       setBookingStatus({ loading: false, message: "Booking settings saved.", type: "success" });
     } catch (err: unknown) {
@@ -92,7 +100,10 @@ export default function SettingsForms({
     };
 
     try {
-      const result = await updateSiteDetails(data);
+      const result = property === "cielo"
+        ? await cieloUpdateSiteDetails(data)
+        : await updateSiteDetails(data);
+
       if (result?.error) throw new Error(result.error);
       setSiteDetailsStatus({ loading: false, message: "Site details saved.", type: "success" });
     } catch (err: unknown) {
@@ -120,6 +131,7 @@ export default function SettingsForms({
       }
     }
   };
+
   return (
     <div className="flex flex-col md:flex-row gap-8 max-w-5xl">
       <div className={`w-full md:w-64 flex-col shrink-0 md:pr-6 ${mobileMenuOpen ? 'flex' : 'hidden md:flex'}`}>
@@ -140,20 +152,22 @@ export default function SettingsForms({
             </svg>
           </button>
 
-          <button 
-            onClick={() => handleTabClick("marketing")} 
-            className={`text-left px-4 py-4 md:py-3 md:rounded-md text-sm font-medium transition-colors border-b border-gray-50 md:border-none flex justify-between items-center ${activeTab === "marketing" ? "md:bg-[#132c4a] md:text-white" : "text-resort-cocoa hover:bg-gray-50"}`}
-          >
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-400 md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          {property === "piero" && (
+            <button 
+              onClick={() => handleTabClick("marketing")} 
+              className={`text-left px-4 py-4 md:py-3 md:rounded-md text-sm font-medium transition-colors border-b border-gray-50 md:border-none flex justify-between items-center ${activeTab === "marketing" ? "md:bg-[#132c4a] md:text-white" : "text-resort-cocoa hover:bg-gray-50"}`}
+            >
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-gray-400 md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span>Marketing Discount</span>
+              </div>
+              <svg className="w-4 h-4 text-gray-300 md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span>Marketing Discount</span>
-            </div>
-            <svg className="w-4 h-4 text-gray-300 md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            </button>
+          )}
 
           <button 
             onClick={() => handleTabClick("booking")} 

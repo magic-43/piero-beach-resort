@@ -61,6 +61,7 @@ export default async function PieroRoomEditPage({
         details_href: fallbackRoom?.detailsHref || `/rooms/${room.slug || room.id}`,
       }}
       globalDiscountPercentage={Number(settings?.global_discount_percentage) || 0}
+      property="piero"
     />
   );
 }

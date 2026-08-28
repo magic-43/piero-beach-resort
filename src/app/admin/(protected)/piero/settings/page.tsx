@@ -11,7 +11,7 @@ export default async function PieroSettingsPage() {
   const { data: settings } = await supabase
     .from("resort_settings")
     .select("*")
-    .eq("id", 1)
+    .or("id.eq.1,property_id.eq.piero")
     .single();
 
   const { data: rooms } = await supabase
@@ -22,5 +22,5 @@ export default async function PieroSettingsPage() {
 
   if (!settings) return <div className="p-8 text-center">Settings not initialized.</div>;
 
-  return <SettingsForms initialSettings={settings} rooms={rooms || []} />;
+  return <SettingsForms initialSettings={settings} rooms={rooms || []} property="piero" />;
 }

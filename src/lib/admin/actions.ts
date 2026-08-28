@@ -72,9 +72,10 @@ export async function updatePaymentSettings(data: Record<string, unknown>) {
         gcash_name: data.gcash_name,
         gcash_number: data.gcash_number,
       })
-      .eq("id", 1);
+      .or("id.eq.1,property_id.eq.piero");
 
     if (error) return { error: "Failed to update payment settings." };
+    revalidatePath("/admin/piero/settings");
     revalidatePath("/admin/settings");
     return { success: true };
   } catch (err: unknown) {
@@ -96,9 +97,10 @@ export async function updateBookingSettings(data: Record<string, unknown>) {
         check_in_time: data.check_in_time,
         check_out_time: data.check_out_time,
       })
-      .eq("id", 1);
+      .or("id.eq.1,property_id.eq.piero");
 
     if (error) return { error: "Failed to update booking settings." };
+    revalidatePath("/admin/piero/settings");
     revalidatePath("/admin/settings");
     return { success: true };
   } catch (err: unknown) {
@@ -116,14 +118,15 @@ export async function updateDiscountSetting(discountPercentage: number) {
     const { error: settingsError } = await supabase
       .from("resort_settings")
       .update({ global_discount_percentage: discountPercentage })
-      .eq("id", 1);
+      .or("id.eq.1,property_id.eq.piero");
 
     if (settingsError) return { error: "Failed to update global discount setting." };
 
-    // 2. Fetch all rooms
+    // 2. Fetch Piero rooms only
     const { data: rooms, error: fetchError } = await supabase
       .from("rooms")
-      .select("id, regular_rate");
+      .select("id, regular_rate")
+      .eq("property_id", "piero");
       
     if (fetchError || !rooms) return { error: "Failed to fetch rooms for pricing update." };
 
@@ -140,6 +143,7 @@ export async function updateDiscountSetting(discountPercentage: number) {
 
     await Promise.all(updates);
 
+    revalidatePath("/admin/piero/settings");
     revalidatePath("/admin/settings");
     revalidatePath("/rooms");
     revalidatePath("/");
@@ -171,13 +175,14 @@ export async function updateSiteDetails(data: {
         site_facebook: data.site_facebook,
         site_google_maps: data.site_google_maps,
       })
-      .eq("id", 1);
+      .or("id.eq.1,property_id.eq.piero");
 
     if (error) {
       console.error("Update Site Details Error:", error);
       return { error: "Failed to update site details. Please try again." };
     }
 
+    revalidatePath("/admin/piero/settings");
     revalidatePath("/admin/settings");
     revalidatePath("/contact");
     revalidatePath("/");

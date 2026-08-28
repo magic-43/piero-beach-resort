@@ -11,7 +11,7 @@ export default async function CieloSettingsPage() {
   const { data: settings } = await supabase
     .from("resort_settings")
     .select("*")
-    .eq("id", 2)  // Cielo's settings row
+    .or("id.eq.2,property_id.eq.cielo")
     .single();
 
   const { data: rooms } = await supabase
@@ -29,5 +29,5 @@ export default async function CieloSettingsPage() {
     );
   }
 
-  return <SettingsForms initialSettings={settings} rooms={rooms || []} />;
+  return <SettingsForms initialSettings={settings} rooms={rooms || []} property="cielo" />;
 }
