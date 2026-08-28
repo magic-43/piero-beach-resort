@@ -286,3 +286,83 @@ export async function updateRoom(data: UpdateRoomPayload) {
     return { error: "An unexpected error occurred." };
   }
 }
+
+/**
+ * Payment Poster Settings (Multi-Property)
+ * Updates or inserts payment poster configuration for a specific hotel_slug ('piero' or 'cielo').
+ */
+export async function updatePaymentPosterSettings(data: {
+  hotelSlug: string;
+  hotelName: string;
+  address: string;
+  contactNumber: string;
+  email: string;
+  logoUrl?: string;
+  gcashEntries: Array<{ number: string; name: string }>;
+  bpiAccountName: string;
+  bpiAccountNumber: string;
+  notes: string[];
+}) {
+  try {
+    await requireAdmin();
+    const supabase = createAdminClient();
+
+    const { data: existing } = await supabase
+      .from("payment_poster_settings")
+      .select("id")
+      .eq("hotel_slug", data.hotelSlug)
+      .maybeSingle();
+
+    if (existing) {
+      const { error: updateError } = await supabase
+        .from("payment_poster_settings")
+        .update({
+          hotel_name: data.hotelName,
+          address: data.address,
+          contact_number: data.contactNumber,
+          email: data.email,
+          logo_url: data.logoUrl || "",
+          gcash_entries: data.gcashEntries,
+          bpi_account_name: data.bpiAccountName,
+          bpi_account_number: data.bpiAccountNumber,
+          notes: data.notes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("hotel_slug", data.hotelSlug);
+
+      if (updateError) {
+        console.error("Payment poster update error:", updateError);
+        return { error: "Failed to update payment poster settings." };
+      }
+    } else {
+      const { error: insertError } = await supabase
+        .from("payment_poster_settings")
+        .insert({
+          hotel_slug: data.hotelSlug,
+          hotel_name: data.hotelName,
+          address: data.address,
+          contact_number: data.contactNumber,
+          email: data.email,
+          logo_url: data.logoUrl || "",
+          gcash_entries: data.gcashEntries,
+          bpi_account_name: data.bpiAccountName,
+          bpi_account_number: data.bpiAccountNumber,
+          notes: data.notes,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        console.error("Payment poster insert error:", insertError);
+        return { error: "Failed to create payment poster settings." };
+      }
+    }
+
+    revalidatePath(`/admin/${data.hotelSlug}/payment-poster`);
+    revalidatePath("/admin/payment-poster");
+    return { success: true };
+  } catch (err: unknown) {
+    if (err instanceof Error) return { error: err.message };
+    return { error: "An unexpected error occurred." };
+  }
+}
+

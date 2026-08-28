@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bed, Settings, LogOut, FileText, ArrowLeftRight } from "lucide-react";
+import { Home, Bed, Settings, LogOut, FileText, ArrowLeftRight, Image as ImageIcon } from "lucide-react";
 import { adminLogout } from "@/lib/admin/actions";
 
 type Property = "piero" | "cielo";
@@ -36,12 +36,14 @@ export function AdminSidebar() {
       ? [
           { label: "Dashboard", href: base, icon: Home },
           { label: "Rooms", href: `${base}/rooms`, icon: Bed },
+          { label: "Payment Poster", href: `${base}/payment-poster`, icon: ImageIcon },
           { label: "Settings", href: `${base}/settings`, icon: Settings },
         ]
       : [
           { label: "Dashboard", href: base, icon: Home },
           { label: "Rooms", href: `${base}/rooms`, icon: Bed },
           { label: "Manual Confirmation", href: `${base}/manual-confirmation`, icon: FileText },
+          { label: "Payment Poster", href: `${base}/payment-poster`, icon: ImageIcon },
           { label: "Settings", href: `${base}/settings`, icon: Settings },
         ]
     : [];
@@ -93,12 +95,15 @@ export function AdminBottomNav() {
       ? [
           { label: "Home", href: base, icon: Home },
           { label: "Rooms", href: `${base}/rooms`, icon: Bed },
+          { label: "Poster", href: `${base}/payment-poster`, icon: ImageIcon },
           { label: "Settings", href: `${base}/settings`, icon: Settings },
         ]
       : [
           { label: "Home", href: base, icon: Home },
           { label: "Rooms", href: `${base}/rooms`, icon: Bed },
           { label: "Manual Conf", href: `${base}/manual-confirmation`, icon: FileText },
+          { label: "Poster", href: `${base}/payment-poster`, icon: ImageIcon },
+          { label: "Settings", href: `${base}/settings`, icon: Settings },
         ];
 
   return (
