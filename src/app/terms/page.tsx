@@ -7,8 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getBookingReminderList, getDynamicTermsSections } from "@/lib/booking-settings";
 
 export const metadata = {
-  title: "Terms & Conditions | Piero Beach Resort",
-  description: "Read the booking and stay terms for Piero Beach Resort in Cabangan, Zambales.",
+  title: "Terms & Conditions",
+  description: "Read the booking and stay terms for Piero Beach Resort in Zambales.",
 };
 
 export default async function TermsPage() {

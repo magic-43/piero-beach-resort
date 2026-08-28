@@ -8,8 +8,8 @@ import Link from "next/link";
 import { Waves, Heart, Coffee } from "lucide-react";
 
 export const metadata = {
-  title: "About Us | Piero Beach Resort",
-  description: "A place made for slower days. Discover Piero Beach Resort, a quiet escape along the coast.",
+  title: "About Us & Story",
+  description: "A place made for slower days. Discover Piero Beach Resort, a quiet escape along the coast in Zambales.",
 };
 
 export default function AboutPage() {

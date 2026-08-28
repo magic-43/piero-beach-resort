@@ -13,6 +13,13 @@ const menuColumns = [
   resort.restaurant.menuCategories.slice(12),
 ];
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dining & Seaside Restaurant",
+  description: "Coastal cuisine, fresh seafood, Filipino specialties, and sunset cocktails at Piero Beach Resort restaurant.",
+};
+
 export default function RestaurantsPage() {
   return (
     <>

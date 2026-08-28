@@ -12,8 +12,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getBookingReminderList, getDynamicFaq } from "@/lib/booking-settings";
 
 export const metadata = {
-  title: "Contact & Concierge | Piero Beach Resort",
-  description: "Contact Piero Beach Resort for reservations, directions, and stay assistance.",
+  title: "Contact & Location",
+  description: "Get in touch with Piero Beach Resort. Location map, directions, phone, and booking concierge assistance.",
 };
 
 export default async function ContactPage() {

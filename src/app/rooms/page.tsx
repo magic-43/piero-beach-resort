@@ -11,6 +11,12 @@ import { Reveal } from "@/components/ui/reveal";
 import { getDynamicRooms } from "@/lib/resort-data";
 import { createClient } from "@/lib/supabase/server";
 import { getBookingReminderList } from "@/lib/booking-settings";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Accommodations & Beachfront Villas",
+  description: "Browse all rooms, villas, and suites at Piero Beach Resort. Featuring private dipping tubs, jacuzzi suites, and complimentary breakfast.",
+};
 
 export default async function RoomsPage() {
   const supabase = await createClient();

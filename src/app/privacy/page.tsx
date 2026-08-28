@@ -5,7 +5,7 @@ import { resort } from "@/data/resort";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy | Piero Beach Resort",
+  title: "Privacy Policy",
   description: "Read the Privacy Policy for guest data processing, collection, and storage at Piero Beach Resort.",
 };
 

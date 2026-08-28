@@ -6,6 +6,12 @@ import { resort, siteImages } from "@/data/resort";
 import Image from "next/image";
 import Link from "next/link";
 import { Sun, Waves, Wind } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Activities & Experiences",
+  description: "Swimming, beach volleyball, kayaking, jetski rides, bonfire evenings, and coastal relaxation at Piero Beach Resort.",
+};
 
 const activityGroups = [
   {

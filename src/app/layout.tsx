@@ -14,8 +14,11 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Piero Beach Resort",
-  description: "Experience premium beachfront luxury at Piero Beach Resort.",
+  title: {
+    default: "Piero Beach Resort – Luxury Beachfront Resort | Zambales",
+    template: "%s | Piero Beach Resort",
+  },
+  description: "Experience beachfront luxury, private dipping tubs, jacuzzi suites, and oceanfront dining at Piero Beach Resort in Zambales.",
   icons: {
     icon: "/icon.svg",
   },

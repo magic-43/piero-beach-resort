@@ -8,8 +8,8 @@ import Link from "next/link";
 import { Users, Wine, Heart } from "lucide-react";
 
 export const metadata = {
-  title: "Events & Celebrations | Piero Beach Resort",
-  description: "Celebrate close to the coast. Beach weddings, outdoor resort events, and private dinners.",
+  title: "Weddings & Private Celebrations",
+  description: "Celebrate close to the coast. Beach weddings, outdoor resort events, corporate retreats, and private dinners at Piero Beach Resort.",
 };
 
 interface EventSpaceProps {
