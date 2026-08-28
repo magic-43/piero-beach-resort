@@ -2,23 +2,57 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bed, Settings, LogOut, FileText } from "lucide-react";
+import { Home, Bed, Settings, LogOut, FileText, ArrowLeftRight } from "lucide-react";
 import { adminLogout } from "@/lib/admin/actions";
+
+type Property = "piero" | "cielo";
+
+function getProperty(pathname: string): Property | null {
+  if (pathname.startsWith("/admin/piero")) return "piero";
+  if (pathname.startsWith("/admin/cielo")) return "cielo";
+  return null;
+}
+
+const propertyMeta: Record<Property, { label: string; color: string; badge: string }> = {
+  piero: {
+    label: "Piero Beach Resort",
+    color: "text-amber-700",
+    badge: "bg-amber-100 text-amber-700",
+  },
+  cielo: {
+    label: "Cielo Alto Place",
+    color: "text-emerald-700",
+    badge: "bg-emerald-100 text-emerald-700",
+  },
+};
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const property = getProperty(pathname);
+  const base = property ? `/admin/${property}` : "/admin";
 
-  const navItems = [
-    { label: "Home", href: "/admin", icon: Home },
-    { label: "Rooms", href: "/admin/rooms", icon: Bed },
-    { label: "Manual Confirmation", href: "/admin/manual-confirmation", icon: FileText },
-    { label: "Settings", href: "/admin/settings", icon: Settings },
-  ];
+  const navItems = property
+    ? [
+        { label: "Dashboard", href: base, icon: Home },
+        { label: "Rooms", href: `${base}/rooms`, icon: Bed },
+        { label: "Manual Confirmation", href: `${base}/manual-confirmation`, icon: FileText },
+        { label: "Settings", href: `${base}/settings`, icon: Settings },
+      ]
+    : [];
 
   return (
-    <nav className="flex-1 py-6 px-4 space-y-2 print:hidden">
+    <nav className="flex-1 py-4 px-4 space-y-1 print:hidden">
+      {/* Active Property Badge in Sidebar (Switch button moved to dashboard header) */}
+      {property && (
+        <div className="mb-4 px-1">
+          <div className={`px-3 py-2 rounded-lg ${propertyMeta[property].badge} text-xs font-bold uppercase tracking-wider text-center shadow-xs`}>
+            {propertyMeta[property].label}
+          </div>
+        </div>
+      )}
+
       {navItems.map((item) => {
-        const isActive = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+        const isActive = item.href === base ? pathname === base : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
@@ -40,22 +74,24 @@ export function AdminSidebar() {
 
 export function AdminBottomNav() {
   const pathname = usePathname();
-  const hideBottomNav = /^\/admin\/rooms\/[^/]+$/.test(pathname);
+  const property = getProperty(pathname);
+  const base = property ? `/admin/${property}` : "/admin";
 
-  if (hideBottomNav) {
-    return null;
-  }
+  const hideBottomNav = /^\/admin\/(piero|cielo)\/rooms\/[^/]+$/.test(pathname);
+  if (hideBottomNav) return null;
+
+  if (!property) return null;
 
   const navItems = [
-    { label: "Home", href: "/admin", icon: Home },
-    { label: "Rooms", href: "/admin/rooms", icon: Bed },
-    { label: "Manual Conf", href: "/admin/manual-confirmation", icon: FileText },
+    { label: "Home", href: base, icon: Home },
+    { label: "Rooms", href: `${base}/rooms`, icon: Bed },
+    { label: "Manual Conf", href: `${base}/manual-confirmation`, icon: FileText },
   ];
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-resort-white border-t border-resort-cocoa/10 flex justify-around items-center h-[72px] px-2 z-50 safe-area-bottom pb-env-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)] print:hidden">
       {navItems.map((item) => {
-        const isActive = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+        const isActive = item.href === base ? pathname === base : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
@@ -76,51 +112,98 @@ export function AdminBottomNav() {
 }
 
 export function AdminDesktopHeader() {
+  const pathname = usePathname();
+  const property = getProperty(pathname);
+
   return (
     <div className="p-6 border-b border-resort-cocoa/10 print:hidden">
-      <h2 className="font-serif text-xl text-resort-cocoa tracking-wide">Piero Admin</h2>
+      <h2 className="font-serif text-xl text-resort-cocoa tracking-wide">
+        {property === "cielo" ? "Cielo Admin" : property === "piero" ? "Piero Admin" : "Admin Portal"}
+      </h2>
     </div>
   );
 }
 
 export function AdminPageHeader() {
   const pathname = usePathname();
-  
-  let pageTitle = "Piero Admin";
-  if (pathname === "/admin") pageTitle = "Hi, Admin";
-  else if (pathname.startsWith("/admin/rooms")) pageTitle = "Rooms";
-  else if (pathname.startsWith("/admin/manual-confirmation")) pageTitle = "Manual Confirmation";
-  else if (pathname.startsWith("/admin/settings")) pageTitle = "Settings";
-  else if (pathname.startsWith("/admin/payments")) pageTitle = "Payments";
+  const property = getProperty(pathname);
+  const base = property ? `/admin/${property}` : "/admin";
+
+  let pageTitle = "Admin";
+  if (pathname === base) pageTitle = "Hi, Admin";
+  else if (pathname.includes("/rooms")) pageTitle = "Rooms";
+  else if (pathname.includes("/manual-confirmation")) pageTitle = "Manual Confirmation";
+  else if (pathname.includes("/settings")) pageTitle = "Settings";
+  else if (pathname.includes("/payments")) pageTitle = "Payments";
+
+  const isHomePage = pathname === base;
 
   return (
-    <div className="hidden md:block mb-8 mt-2 print:hidden">
-      <h1 className="font-serif text-3xl text-resort-cocoa tracking-wide">{pageTitle}</h1>
+    <div className="hidden md:flex items-center justify-between mb-8 mt-2 print:hidden">
+      <div>
+        <h1 className="font-serif text-3xl text-resort-cocoa tracking-wide">{pageTitle}</h1>
+        {isHomePage && property && (
+          <p className="text-xs text-resort-cocoa/60 mt-1 font-medium">
+            Managing {propertyMeta[property]?.label}
+          </p>
+        )}
+      </div>
+
+      {/* Switch Property button on the far right of 'Hi Admin' on Desktop */}
+      {isHomePage && (
+        <Link
+          href="/admin"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-resort-sand/60 hover:bg-resort-sand text-resort-cocoa text-xs font-semibold uppercase tracking-wider transition-colors border border-resort-cocoa/10 shadow-xs"
+        >
+          <ArrowLeftRight className="w-4 h-4" />
+          <span>Switch Property</span>
+        </Link>
+      )}
     </div>
   );
 }
 
 export function AdminMobileHeader() {
   const pathname = usePathname();
-  
-  let pageTitle = "Piero Admin";
-  if (pathname === "/admin") pageTitle = "Hi, Admin";
-  else if (pathname.startsWith("/admin/rooms")) pageTitle = "Rooms";
-  else if (pathname.startsWith("/admin/manual-confirmation")) pageTitle = "Manual Confirmation";
-  else if (pathname.startsWith("/admin/settings")) pageTitle = "Settings";
-  else if (pathname.startsWith("/admin/payments")) pageTitle = "Payments";
+  const property = getProperty(pathname);
+  const base = property ? `/admin/${property}` : "/admin";
+
+  let pageTitle = "Admin";
+  if (pathname === base) pageTitle = "Hi, Admin";
+  else if (pathname.includes("/rooms")) pageTitle = "Rooms";
+  else if (pathname.includes("/manual-confirmation")) pageTitle = "Manual Confirmation";
+  else if (pathname.includes("/settings")) pageTitle = "Settings";
+  else if (pathname.includes("/payments")) pageTitle = "Payments";
 
   return (
-    <div className="md:hidden flex items-center justify-between px-6 py-5 bg-resort-offwhite sticky top-0 z-40 print:hidden">
+    <div className="md:hidden flex items-center justify-between px-6 py-5 bg-resort-offwhite sticky top-0 z-40 print:hidden border-b border-resort-cocoa/10">
       <h2 className="font-serif text-xl text-resort-cocoa tracking-wide">{pageTitle}</h2>
-      <div className="flex items-center gap-2">
-        {!pathname.startsWith("/admin/settings") ? (
-          <Link href="/admin/settings" className="p-2 text-resort-cocoa/70 hover:text-resort-cocoa">
+      
+      {/* Mobile Top Right Header: Switch Property button right next to Settings */}
+      <div className="flex items-center gap-1">
+        <Link
+          href="/admin"
+          title="Switch Property"
+          className="p-2 text-resort-cocoa/70 hover:text-resort-cocoa hover:bg-resort-sand/40 rounded-lg transition-colors flex items-center justify-center"
+        >
+          <ArrowLeftRight className="w-5 h-5" />
+        </Link>
+
+        {!pathname.includes("/settings") ? (
+          <Link
+            href={`${base}/settings`}
+            title="Settings"
+            className="p-2 text-resort-cocoa/70 hover:text-resort-cocoa hover:bg-resort-sand/40 rounded-lg transition-colors"
+          >
             <Settings className="w-5 h-5" />
           </Link>
         ) : (
           <form action={adminLogout}>
-            <button type="submit" className="p-2 -mr-2 text-red-600 hover:bg-red-50 rounded-full transition-colors">
+            <button
+              type="submit"
+              title="Sign out"
+              className="p-2 -mr-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            >
               <LogOut className="w-5 h-5" />
             </button>
           </form>
