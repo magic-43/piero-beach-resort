@@ -289,18 +289,14 @@ export async function updateRoom(data: UpdateRoomPayload) {
 
 /**
  * Payment Poster Settings (Multi-Property)
- * Updates or inserts payment poster configuration for a specific hotel_slug ('piero' or 'cielo').
+ * Updates or inserts payment poster accounts & notes for a specific hotel_slug ('piero' or 'cielo').
  */
 export async function updatePaymentPosterSettings(data: {
   hotelSlug: string;
-  hotelName: string;
-  address: string;
-  contactNumber: string;
-  email: string;
-  logoUrl?: string;
-  gcashEntries: Array<{ number: string; name: string }>;
+  bankName?: string;
   bpiAccountName: string;
   bpiAccountNumber: string;
+  gcashEntries: Array<{ number: string; name: string }>;
   notes: string[];
 }) {
   try {
@@ -313,21 +309,19 @@ export async function updatePaymentPosterSettings(data: {
       .eq("hotel_slug", data.hotelSlug)
       .maybeSingle();
 
+    const payload = {
+      bank_name: data.bankName || "BPI",
+      bpi_account_name: data.bpiAccountName || "",
+      bpi_account_number: data.bpiAccountNumber || "",
+      gcash_entries: data.gcashEntries || [],
+      notes: data.notes || [],
+      updated_at: new Date().toISOString(),
+    };
+
     if (existing) {
       const { error: updateError } = await supabase
         .from("payment_poster_settings")
-        .update({
-          hotel_name: data.hotelName,
-          address: data.address,
-          contact_number: data.contactNumber,
-          email: data.email,
-          logo_url: data.logoUrl || "",
-          gcash_entries: data.gcashEntries,
-          bpi_account_name: data.bpiAccountName,
-          bpi_account_number: data.bpiAccountNumber,
-          notes: data.notes,
-          updated_at: new Date().toISOString(),
-        })
+        .update(payload)
         .eq("hotel_slug", data.hotelSlug);
 
       if (updateError) {
@@ -339,16 +333,7 @@ export async function updatePaymentPosterSettings(data: {
         .from("payment_poster_settings")
         .insert({
           hotel_slug: data.hotelSlug,
-          hotel_name: data.hotelName,
-          address: data.address,
-          contact_number: data.contactNumber,
-          email: data.email,
-          logo_url: data.logoUrl || "",
-          gcash_entries: data.gcashEntries,
-          bpi_account_name: data.bpiAccountName,
-          bpi_account_number: data.bpiAccountNumber,
-          notes: data.notes,
-          updated_at: new Date().toISOString(),
+          ...payload,
         });
 
       if (insertError) {
@@ -365,4 +350,5 @@ export async function updatePaymentPosterSettings(data: {
     return { error: "An unexpected error occurred." };
   }
 }
+
 

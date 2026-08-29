@@ -1,6 +1,6 @@
 ﻿import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin/auth";
-import PaymentPosterClient, { PaymentPosterSettings } from "../../payment-poster/payment-poster-client";
+import PaymentPosterClient, { PaymentPosterSettings, PropertyBranding } from "../../payment-poster/payment-poster-client";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -13,28 +13,48 @@ export default async function PieroPaymentPosterPage() {
   await requireAdmin();
   const supabase = createAdminClient();
 
-  const { data: settings } = await supabase
+  // Load Piero site settings from resort_settings (id = 1)
+  const { data: siteSettings } = await supabase
+    .from("resort_settings")
+    .select("*")
+    .eq("id", 1)
+    .maybeSingle();
+
+  // Load poster-specific accounts from payment_poster_settings
+  const { data: posterSettings } = await supabase
     .from("payment_poster_settings")
     .select("*")
     .eq("hotel_slug", "piero")
     .maybeSingle();
 
-  const initialSettings: PaymentPosterSettings = settings || {
-    hotel_slug: "piero",
-    hotel_name: "Piero Beach Resort",
+  const branding: PropertyBranding = {
+    slug: "piero",
+    name: "Piero Beach Resort",
     address: "Sitio Aplaya, Cabangan, Zambales",
-    contact_number: "+63 917 123 4567",
-    email: "pierobeachresort@gmail.com",
-    logo_url: "",
-    gcash_entries: [{ name: "Piero Beach Resort", number: "0917 123 4567" }],
-    bpi_account_name: "Piero Beach Resort Operations",
-    bpi_account_number: "1234 5678 9012",
-    notes: [
-      "Please upload your payment receipt to complete your booking reservation.",
-      "Strictly cashless transactions for security and quick check-in verification.",
-    ],
+    phone: siteSettings?.site_phone || "+63 995 385 5517",
+    email: siteSettings?.site_email || "pierobeachresort@gmail.com",
+    logo: "/icon.svg",
   };
 
-  return <PaymentPosterClient initialSettings={initialSettings} property="piero" />;
+  const initialSettings: PaymentPosterSettings = {
+    hotel_slug: "piero",
+    bank_name: posterSettings?.bank_name || siteSettings?.bank_name || "BPI",
+    bpi_account_name: posterSettings?.bpi_account_name || siteSettings?.bank_account_name || "Piero Beach Resort Operations",
+    bpi_account_number: posterSettings?.bpi_account_number || siteSettings?.bank_account_number || "1234 5678 9012",
+    gcash_entries: posterSettings?.gcash_entries && posterSettings.gcash_entries.length > 0
+      ? posterSettings.gcash_entries
+      : siteSettings?.gcash_number
+      ? [{ name: siteSettings.gcash_name || "Piero Beach Resort", number: siteSettings.gcash_number }]
+      : [{ name: "Piero Beach Resort", number: "0917 123 4567" }],
+    notes: posterSettings?.notes && posterSettings.notes.length > 0
+      ? posterSettings.notes
+      : [
+          "Please upload your payment receipt screenshot after booking.",
+          "Strictly cashless transactions for security and quick check-in verification.",
+          "Interbank transfers may take 1-3 business days to clear.",
+        ],
+  };
+
+  return <PaymentPosterClient initialSettings={initialSettings} branding={branding} />;
 }
 
