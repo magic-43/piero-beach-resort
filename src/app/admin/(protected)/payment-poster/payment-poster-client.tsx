@@ -155,11 +155,38 @@ export default function PaymentPosterClient({
         backgroundColor: bg,
         width: POSTER_W,
         height: POSTER_H,
+        cacheBust: true,
       });
+
+      const filename = `Payment_Poster_${branding.name.replace(/\s+/g, "_")}.png`;
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], filename, { type: "image/png" });
+
+      // Native mobile share sheet (iOS Save to Photos / Camera Roll, Android Save to Device, WhatsApp, etc.)
+      if (typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `${branding.name} - Official Payment Details`,
+          });
+          return;
+        } catch (shareErr: unknown) {
+          if (shareErr instanceof Error && shareErr.name === "AbortError") {
+            return; // User cancelled share sheet
+          }
+        }
+      }
+
+      // Standard download fallback (Desktop & browsers without file sharing)
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.download = `Payment_Poster_${branding.name.replace(/\s+/g, "_")}.png`;
-      link.href = dataUrl;
+      link.download = filename;
+      link.href = blobUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 2500);
     } catch (err) {
       console.error(err);
       alert("Failed to export PNG. Please try again.");
