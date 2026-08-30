@@ -151,6 +151,7 @@ export function AdminPageHeader() {
   if (pathname === base) pageTitle = "Hi, Admin";
   else if (pathname.includes("/rooms")) pageTitle = "Rooms";
   else if (pathname.includes("/manual-confirmation")) pageTitle = "Manual Confirmation";
+  else if (pathname.includes("/payment-poster")) pageTitle = "Payment Poster";
   else if (pathname.includes("/settings")) pageTitle = "Settings";
   else if (pathname.includes("/payments")) pageTitle = "Payments";
 
@@ -190,6 +191,7 @@ export function AdminMobileHeader() {
   if (pathname === base) pageTitle = "Hi, Admin";
   else if (pathname.includes("/rooms")) pageTitle = "Rooms";
   else if (pathname.includes("/manual-confirmation")) pageTitle = "Manual Confirmation";
+  else if (pathname.includes("/payment-poster")) pageTitle = "Payment Poster";
   else if (pathname.includes("/settings")) pageTitle = "Settings";
   else if (pathname.includes("/payments")) pageTitle = "Payments";
 

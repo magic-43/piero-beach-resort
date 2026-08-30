@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
@@ -42,6 +42,18 @@ type FormState = {
   notes: string[];
 };
 
+function formatGcashNumber(val: string): string {
+  const digits = val.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+}
+
+function formatAccountNumber(val: string): string {
+  const digits = val.replace(/\D/g, "").slice(0, 16);
+  return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+}
+
 export default function PaymentPosterClient({
   initialSettings,
   branding,
@@ -62,8 +74,11 @@ export default function PaymentPosterClient({
   const [form, setForm] = useState<FormState>({
     bankName:         initialSettings.bank_name         || "BPI",
     bpiAccountName:   initialSettings.bpi_account_name   || "",
-    bpiAccountNumber: initialSettings.bpi_account_number || "",
-    gcashEntries:     initialSettings.gcash_entries     || [],
+    bpiAccountNumber: formatAccountNumber(initialSettings.bpi_account_number || ""),
+    gcashEntries:     (initialSettings.gcash_entries || []).map((e) => ({
+      ...e,
+      number: formatGcashNumber(e.number || ""),
+    })),
     notes:            initialSettings.notes             || [],
   });
 
@@ -82,13 +97,22 @@ export default function PaymentPosterClient({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
+    if (name === "bpiAccountNumber") {
+      setForm((p) => ({ ...p, bpiAccountNumber: formatAccountNumber(value) }));
+    } else {
+      setForm((p) => ({ ...p, [name]: value }));
+    }
   };
 
   const addGcash    = () => setForm((p) => ({ ...p, gcashEntries: [...p.gcashEntries, { number: "", name: "" }] }));
   const removeGcash = (i: number) => setForm((p) => ({ ...p, gcashEntries: p.gcashEntries.filter((_, idx) => idx !== i) }));
   const updateGcash = (i: number, field: keyof GcashEntry, val: string) =>
-    setForm((p) => ({ ...p, gcashEntries: p.gcashEntries.map((e, idx) => idx === i ? { ...e, [field]: val } : e) }));
+    setForm((p) => ({
+      ...p,
+      gcashEntries: p.gcashEntries.map((e, idx) =>
+        idx === i ? { ...e, [field]: field === "number" ? formatGcashNumber(val) : val } : e
+      ),
+    }));
 
   const addNote    = () => setForm((p) => ({ ...p, notes: [...p.notes, ""] }));
   const removeNote = (i: number) => setForm((p) => ({ ...p, notes: p.notes.filter((_, idx) => idx !== i) }));
@@ -115,10 +139,10 @@ export default function PaymentPosterClient({
   };
 
   const isCielo = branding.slug === "cielo";
-  const dark   = isCielo ? "#14331e" : "#132c4a";
-  const accent = isCielo ? "#c8922e" : "#c4a47c";
-  const bg     = isCielo ? "#F5F1E6" : "#F3EFE4";
-  const muted  = isCielo ? "#3a6b4a" : "#3a5278";
+  const dark   = isCielo ? "#14331e" : "#302720"; // Piero website cocoa brown
+  const accent = isCielo ? "#c8922e" : "#B96D4C"; // Piero website terracotta
+  const bg     = isCielo ? "#F5F1E6" : "#F8F4EE"; // Piero website offwhite
+  const muted  = isCielo ? "#3a6b4a" : "#69745D"; // Piero website olive
   const slug   = branding.slug;
 
   const handleDownloadPng = useCallback(async () => {
@@ -257,192 +281,225 @@ export default function PaymentPosterClient({
                 <path d="M600 600 L490 600 C545 588 588 545 600 490 Z" fill={accent} opacity="0.045" />
               </svg>
 
-              {/* ── HEADER ── */}
-              <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 22px 13px", borderBottom: `1.5px solid ${dark}18`, zIndex: 1, position: "relative" }}>
-                {branding.slug === "piero" ? (
-                  <div style={{ width: "72px", flexShrink: 0 }}>
-                    <Logo className="w-full h-auto" />
+              {/* Art Deco Gold Corner Frame */}
+              <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 10 }} viewBox="0 0 600 600">
+                {/* Outer frame */}
+                <rect x="18" y="18" width="564" height="564" fill="none" stroke={accent} strokeWidth="1.2" opacity="0.8" />
+                {/* Corner diagonals */}
+                {/* Top-Left */}
+                <line x1="12" y1="36" x2="36" y2="12" stroke={accent} strokeWidth="1.2" />
+                <line x1="18" y1="44" x2="44" y2="18" stroke={accent} strokeWidth="0.8" opacity="0.6" />
+                {/* Top-Right */}
+                <line x1="588" y1="36" x2="564" y2="12" stroke={accent} strokeWidth="1.2" />
+                <line x1="582" y1="44" x2="556" y2="18" stroke={accent} strokeWidth="0.8" opacity="0.6" />
+                {/* Bottom-Left */}
+                <line x1="12" y1="564" x2="36" y2="588" stroke={accent} strokeWidth="1.2" />
+                <line x1="18" y1="556" x2="44" y2="582" stroke={accent} strokeWidth="0.8" opacity="0.6" />
+                {/* Bottom-Right */}
+                <line x1="588" y1="564" x2="564" y2="588" stroke={accent} strokeWidth="1.2" />
+                <line x1="582" y1="556" x2="556" y2="582" stroke={accent} strokeWidth="0.8" opacity="0.6" />
+              </svg>
+
+              {/* ── CENTERED LUXURY HEADER ── */}
+              <div style={{ textAlign: "center", paddingTop: "26px", paddingBottom: "6px", paddingLeft: "32px", paddingRight: "32px", zIndex: 2, position: "relative" }}>
+                {/* Centered Logo */}
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "8px" }}>
+                  {branding.slug === "piero" ? (
+                    <div style={{ width: "74px", marginTop: "8px", marginBottom: "4px" }}>
+                      <Logo className="w-full h-auto" />
+                    </div>
+                  ) : (
+                    <div style={{ width: "56px", height: "56px", position: "relative" }}>
+                      <Image src={branding.logo} alt={branding.name} fill style={{ objectFit: "contain" }} sizes="56px" unoptimized />
+                    </div>
+                  )}
+                </div>
+
+                {/* Property Name */}
+                <div style={{ fontSize: "22px", fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: dark, fontFamily: "Georgia, serif", lineHeight: 1.2, marginBottom: "3px" }}>
+                  {branding.name}
+                </div>
+
+                {/* Subtitle / Tagline */}
+                <div style={{ fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: accent, fontFamily: "Arial, sans-serif", marginBottom: "5px" }}>
+                  {branding.slug === "cielo" ? "HOTEL & RESTAURANT · TANAY, RIZAL" : "BEACH RESORT · CABANGAN, ZAMBALES"}
+                </div>
+
+                {/* Address & Contact Details */}
+                <div style={{ fontSize: "9.5px", color: muted, opacity: 0.85, fontFamily: "Arial, sans-serif", display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "6px" }}>
+                  {branding.address && <span>{branding.address}</span>}
+                  {branding.phone && <span>· {branding.phone}</span>}
+                  {branding.email && <span>· {branding.email}</span>}
+                </div>
+
+                {/* ── OFFICIAL PAYMENT DETAILS BANNER ── */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: "12px", marginBottom: "4px" }}>
+                  <div style={{ flex: 1, height: "1px", background: `linear-gradient(to right, transparent, ${accent})`, opacity: 0.6 }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: accent }}>
+                    <span style={{ fontSize: "9px" }}>❖</span>
+                    <span style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: dark, fontFamily: "Arial, sans-serif" }}>
+                      OFFICIAL PAYMENT DETAILS
+                    </span>
+                    <span style={{ fontSize: "9px" }}>❖</span>
                   </div>
-                ) : (
-                  <div style={{ width: "66px", height: "66px", flexShrink: 0, position: "relative", borderRadius: "10px", overflow: "hidden", border: `1.5px solid ${dark}20` }}>
-                    <Image src={branding.logo} alt={branding.name} fill style={{ objectFit: "contain" }} sizes="66px" unoptimized />
+                  <div style={{ flex: 1, height: "1px", background: `linear-gradient(to left, transparent, ${accent})`, opacity: 0.6 }} />
+                </div>
+              </div>
+
+              {/* ── MAIN BODY: CENTERED PAYMENT SECTIONS & NOTES ── */}
+              <div style={{ padding: "14px 40px 4px", flex: 1, display: "flex", flexDirection: "column", zIndex: 2, position: "relative", gap: "18px", textAlign: "center" }}>
+                
+                {/* 1. GCash Section Header & Details */}
+                <div>
+                  <div style={{ fontSize: "22px", fontWeight: 800, color: dark, fontFamily: "Georgia, serif", marginBottom: "8px", letterSpacing: "0.01em" }}>
+                    Gcash
+                  </div>
+                  {form.gcashEntries.length > 0 ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                      {form.gcashEntries.map((entry, i) => (
+                        <div key={i} style={{ fontSize: "15px", color: dark, lineHeight: 1.45, fontFamily: "Georgia, serif" }}>
+                          <span style={{ fontFamily: "Courier New, monospace", fontWeight: 700, letterSpacing: "0.04em", fontSize: "15px" }}>
+                            {formatGcashNumber(entry.number) || "09XX XXX XXXX"}
+                          </span>
+                          {entry.name && <span style={{ fontWeight: 600 }}> – {entry.name}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: "13px", color: `${dark}50`, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+                      No GCash accounts added yet.
+                    </div>
+                  )}
+                </div>
+
+                {/* Subtle Diamond Divider between GCash & Bank */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", width: "160px", margin: "0 auto", opacity: 0.4 }}>
+                  <div style={{ flex: 1, height: "1px", background: `linear-gradient(to right, transparent, ${accent})` }} />
+                  <span style={{ fontSize: "7px", color: accent }}>❖</span>
+                  <div style={{ flex: 1, height: "1px", background: `linear-gradient(to left, transparent, ${accent})` }} />
+                </div>
+
+                {/* 2. Bank Transfer Section Header & Details */}
+                <div>
+                  <div style={{ fontSize: "22px", fontWeight: 800, color: dark, fontFamily: "Georgia, serif", marginBottom: "8px", letterSpacing: "0.01em" }}>
+                    {form.bankName ? form.bankName : "Bank Transfer"}
+                  </div>
+                  {form.bpiAccountName || form.bpiAccountNumber ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "15px", color: dark, fontFamily: "Georgia, serif" }}>
+                      {form.bpiAccountName && (
+                        <div style={{ fontWeight: 600 }}>{form.bpiAccountName}</div>
+                      )}
+                      {form.bpiAccountNumber && (
+                        <div>
+                          Account No.{" "}
+                          <span style={{ fontFamily: "Courier New, monospace", fontWeight: 700, letterSpacing: "0.04em" }}>
+                            {formatAccountNumber(form.bpiAccountNumber)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: "13px", color: `${dark}50`, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+                      No bank transfer details added yet.
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Reservation Notes (Anchored above bottom landscape) */}
+                {form.notes.length > 0 && (
+                  <div style={{ textAlign: "center", padding: "4px 16px 2px", marginTop: "auto" }}>
+                    {form.notes.map((note, i) => (
+                      <div key={i} style={{ fontSize: "11px", color: "#b91c1c", lineHeight: 1.55, fontStyle: "italic", fontFamily: "Georgia, serif", fontWeight: 600, marginBottom: "3px" }}>
+                        *{note}
+                      </div>
+                    ))}
                   </div>
                 )}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "20px", fontWeight: 900, letterSpacing: "0.05em", textTransform: "uppercase", color: dark, lineHeight: 1.1, marginBottom: "4px" }}>
-                    {branding.name}
-                  </div>
-                  {branding.address && <div style={{ fontSize: "10px", color: muted, fontWeight: 500, marginBottom: "2px" }}>{branding.address}</div>}
-                  <div style={{ fontSize: "10px", color: muted, opacity: 0.82 }}>
-                    {branding.phone && `Contact No.: ${branding.phone}`}
-                    {branding.phone && branding.email && "  |  "}
-                    {branding.email && `Email: ${branding.email}`}
-                  </div>
-                </div>
-                <div style={{ width: "3px", height: "52px", borderRadius: "2px", background: `linear-gradient(to bottom, ${accent}, ${accent}33)`, flexShrink: 0 }} />
               </div>
 
-              {/* ── TITLE ── */}
-              <div style={{ textAlign: "center", padding: "9px 24px 11px", background: `${dark}06`, borderBottom: `1px solid ${dark}10`, zIndex: 1, position: "relative" }}>
-                <div style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "0.28em", textTransform: "uppercase", color: dark }}>Mode of Payment</div>
-                <div style={{ width: "40px", height: "2.5px", background: accent, margin: "5px auto 0", borderRadius: "2px" }} />
-              </div>
-
-              {/* ── BODY ── */}
-              {/* The outer body is position:relative overflow:hidden — clips the phone bleed */}
-              <div style={{ display: "flex", flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
-
-                {/* 
-                  PHONE — positioned absolutely so we control exactly how much bleeds off left.
-                  Left edge of phone sits at x=-48 (48px off-screen left = dramatic slide-in effect).
-                  Phone itself is 140px wide in SVG space, so ~66px of visible phone shows.
-                */}
-                <div style={{ position: "absolute", left: "-48px", top: 0, bottom: 0, width: "310px", display: "flex", alignItems: "center" }}>
-                  <svg
-                    width="310"
-                    height="410"
-                    viewBox="0 0 310 410"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    style={{ overflow: "visible" }}
-                  >
-                    <defs>
-                      <linearGradient id={`pg${slug}`} x1="0" y1="0" x2="0.4" y2="1">
-                        <stop offset="0%" stopColor={dark} />
-                        <stop offset="100%" stopColor={dark} stopOpacity="0.75" />
-                      </linearGradient>
-                      <linearGradient id={`cg${slug}`} x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor={accent} stopOpacity="0.98" />
-                        <stop offset="100%" stopColor={dark} stopOpacity="0.9" />
-                      </linearGradient>
-                      <filter id={`sh${slug}`} x="-30%" y="-15%" width="160%" height="140%">
-                        <feDropShadow dx="8" dy="14" stdDeviation="14" floodColor={dark} floodOpacity="0.22" />
-                      </filter>
-                    </defs>
-
-                    {/* ── PHONE — starts at x=5, takes up x=5..155 (150px wide, 360px tall) ── */}
-                    <rect x="5" y="15" width="150" height="360" rx="26" ry="26" fill={`url(#pg${slug})`} filter={`url(#sh${slug})`} />
-                    {/* Shine half */}
-                    <rect x="5" y="15" width="75"  height="360" rx="26" ry="26" fill="white" opacity="0.04" />
-                    {/* Screen */}
-                    <rect x="18" y="38" width="124" height="292" rx="10" ry="10" fill="#eaf1f8" />
-                    {/* Notch */}
-                    <rect x="56" y="22" width="48" height="11" rx="5.5" ry="5.5" fill={dark} opacity="0.55" />
-                    {/* Home bar */}
-                    <rect x="58" y="370" width="44" height="6" rx="3" ry="3" fill="white" opacity="0.2" />
-
-                    {/* ── Card on screen ── */}
-                    <g transform="translate(22,50) rotate(-6)">
-                      <rect width="112" height="72" rx="11" ry="11" fill={`url(#cg${slug})`} />
-                      <rect width="56"  height="72" rx="11" ry="11" fill="white" opacity="0.05" />
-                      {/* Chip */}
-                      <rect x="11" y="16" width="22" height="17" rx="3.5" ry="3.5" fill={accent} />
-                      <line x1="16" y1="16" x2="16" y2="33" stroke={dark} strokeWidth="1" opacity="0.35" />
-                      <line x1="11" y1="24.5" x2="33" y2="24.5" stroke={dark} strokeWidth="1" opacity="0.35" />
-                      {/* Number dots */}
-                      <g fill="white" opacity="0.5">
-                        <circle cx="11" cy="55" r="2.5"/><circle cx="19" cy="55" r="2.5"/><circle cx="27" cy="55" r="2.5"/>
-                        <circle cx="39" cy="55" r="2.5"/><circle cx="47" cy="55" r="2.5"/>
-                        <circle cx="59" cy="55" r="2.5"/><circle cx="67" cy="55" r="2.5"/>
-                        <circle cx="79" cy="55" r="2.5"/><circle cx="87" cy="55" r="2.5"/>
-                      </g>
-                      {/* NFC */}
-                      <path d="M90 12 Q101 21 101 33 M93 16 Q101 24 101 33 M97 21 Q101 26 101 33" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity="0.6" />
+              {/* ── MONOCHROME LANDSCAPE AT BOTTOM (Mountain for Cielo / Beach for Piero) ── */}
+              <div style={{ position: "relative", width: "100%", marginTop: "auto", zIndex: 1, pointerEvents: "none", overflow: "hidden" }}>
+                {isCielo ? (
+                  /* Cielo Mountain View */
+                  <svg viewBox="0 0 600 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "110px", display: "block" }} preserveAspectRatio="none">
+                    {/* Background ridge */}
+                    <path d="M0 120 L0 65 Q 90 35 180 58 Q 280 25 370 54 Q 470 20 540 50 Q 580 38 600 58 L600 120 Z" fill={dark} opacity="0.08" />
+                    {/* Mid ridge with peak angles */}
+                    <path d="M0 120 L0 80 L 80 48 L 160 76 L 240 38 L 320 72 L 410 32 L 490 68 L 560 44 L 600 75 L600 120 Z" fill={dark} opacity="0.14" />
+                    {/* Ridge lines */}
+                    <path d="M 240 38 L 275 72 M 410 32 L 438 68 M 80 48 L 118 76 M 560 44 L 582 75" stroke={dark} strokeWidth="1.2" opacity="0.22" />
+                    {/* Foreground hills */}
+                    <path d="M0 120 L0 92 Q 120 74 230 88 Q 350 72 470 90 Q 550 80 600 92 L600 120 Z" fill={dark} opacity="0.22" />
+                    {/* Pine trees group left */}
+                    <g fill={dark} opacity="0.42">
+                      <polygon points="50,78 46,86 54,86" />
+                      <polygon points="50,83 44,92 56,92" />
+                      <polygon points="50,89 42,99 58,99" />
+                      <rect x="49" y="99" width="2" height="5" />
+                      <polygon points="68,72 64,81 72,81" />
+                      <polygon points="68,78 62,88 74,88" />
+                      <polygon points="68,85 60,95 76,95" />
+                      <rect x="67" y="95" width="2" height="5" />
+                      <polygon points="84,80 81,87 87,87" />
+                      <polygon points="84,85 79,93 89,93" />
+                      <rect x="83" y="93" width="2" height="4" />
                     </g>
-
-                    {/* ── Success button ── */}
-                    <rect x="28" y="236" width="104" height="28" rx="14" ry="14" fill={dark} opacity="0.78" />
-                    <path d="M 52 250 L 63 261 L 84 239" stroke={accent} strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-
-                    {/* ── Floating coin (overlaps right edge of phone) — peso as paths ── */}
-                    <circle cx="195" cy="260" r="40" fill={`url(#cg${slug})`} filter={`url(#sh${slug})`} />
-                    <circle cx="195" cy="260" r="34" fill="none" stroke="white" strokeWidth="1.8" opacity="0.2" />
-                    {/* Peso P vertical stroke */}
-                    <line   x1="191" y1="242" x2="191" y2="280" stroke="white" strokeWidth="4" strokeLinecap="round" />
-                    {/* Peso P bowl */}
-                    <path   d="M191 242 Q206 242 210 251 Q214 260 207 266 Q201 270 191 269" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                    {/* Peso horizontal bars */}
-                    <line   x1="183" y1="254" x2="210" y2="254" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                    <line   x1="183" y1="262" x2="210" y2="262" stroke="white" strokeWidth="3" strokeLinecap="round" />
-
-                    {/* ── GCash badge (overlapping phone's right edge) ── */}
-                    <rect x="108" y="188" width="76" height="30" rx="15" ry="15" fill={accent} />
-                    <text x="146" y="208" textAnchor="middle" fill="white" fontSize="12.5" fontWeight="800" letterSpacing="0.5" fontFamily="Arial, sans-serif">GCash</text>
-
-                    {/* Accent dots */}
-                    <rect x="230" y="152" width="11" height="11" transform="rotate(45 235.5 157.5)" fill={accent} opacity="0.45" />
-                    <rect x="236" y="315" width="9"  height="9"  transform="rotate(45 240.5 319.5)" fill={dark}  opacity="0.1" />
-                    <circle cx="255" cy="192" r="5"   fill={accent} opacity="0.45" />
-                    <circle cx="264" cy="178" r="3"   fill={dark}  opacity="0.1" />
-                    <circle cx="272" cy="350" r="4"   fill={accent} opacity="0.25" />
-
-                    {/* Flow curves */}
-                    <path d="M 5 390 Q 100 360 190 385 Q 250 400 305 375" fill="none" stroke={accent} strokeWidth="1.8" opacity="0.2" />
-                    <path d="M 5 400 Q 100 372 190 397 Q 250 410 305 385" fill="none" stroke={dark}   strokeWidth="1"   opacity="0.06" />
+                    {/* Pine trees group right */}
+                    <g fill={dark} opacity="0.38">
+                      <polygon points="440,74 436,83 444,83" />
+                      <polygon points="440,80 434,90 446,90" />
+                      <polygon points="440,87 432,97 448,97" />
+                      <rect x="439" y="97" width="2" height="5" />
+                      <polygon points="458,68 454,77 462,77" />
+                      <polygon points="458,74 452,84 464,84" />
+                      <polygon points="458,81 450,92 466,92" />
+                      <rect x="457" y="92" width="2" height="5" />
+                    </g>
                   </svg>
-                </div>
-
-                {/* ── Payment Details (right column) ── */}
-                <div style={{ marginLeft: "272px", flex: 1, display: "flex", flexDirection: "column", gap: "16px", justifyContent: "center", paddingRight: "26px" }}>
-
-                  {form.gcashEntries.length > 0 && (
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: dark, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 3px 8px ${dark}30` }}>
-                          <span style={{ color: accent, fontSize: "15px", fontWeight: 900 }}>G</span>
-                        </div>
-                        <span style={{ fontSize: "22px", fontWeight: 800, color: dark, letterSpacing: "-0.01em" }}>Gcash</span>
-                      </div>
-                      <div style={{ paddingLeft: "10px", borderLeft: `3px solid ${accent}`, display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {form.gcashEntries.map((entry, i) => (
-                          <div key={i} style={{ fontSize: "12px", color: dark, lineHeight: 1.5 }}>
-                            <span style={{ fontFamily: "Courier New, monospace", letterSpacing: "0.04em" }}>{entry.number || "09XX XXX XXXX"}</span>
-                            {entry.name && <span style={{ fontWeight: 700 }}> - {entry.name}</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {(form.bpiAccountName || form.bpiAccountNumber) && (
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: dark, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 3px 8px ${dark}30` }}>
-                          <span style={{ color: accent, fontSize: "12px", fontWeight: 900 }}>B</span>
-                        </div>
-                        <span style={{ fontSize: "22px", fontWeight: 800, color: dark, letterSpacing: "-0.01em" }}>{form.bankName || "BPI"}</span>
-                      </div>
-                      <div style={{ paddingLeft: "10px", borderLeft: `3px solid ${accent}`, display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {form.bpiAccountName && <div style={{ fontSize: "12px", color: dark }}>{form.bpiAccountName}</div>}
-                        {form.bpiAccountNumber && (
-                          <div style={{ fontSize: "12px", color: dark }}>
-                            Account No. <span style={{ fontFamily: "Courier New, monospace", fontWeight: 700, letterSpacing: "0.04em" }}>{form.bpiAccountNumber}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {form.gcashEntries.length === 0 && !form.bpiAccountName && !form.bpiAccountNumber && (
-                    <div style={{ color: `${dark}40`, fontSize: "11px", fontStyle: "italic" }}>Fill in payment details on the left.</div>
-                  )}
-                </div>
+                ) : (
+                  /* Piero Beach View */
+                  <svg viewBox="0 0 600 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "110px", display: "block" }} preserveAspectRatio="none">
+                    {/* Horizon */}
+                    <rect x="0" y="55" width="600" height="65" fill={dark} opacity="0.06" />
+                    <line x1="0" y1="55" x2="600" y2="55" stroke={dark} strokeWidth="1" opacity="0.2" />
+                    {/* Distant wave lines */}
+                    <path d="M 30 66 Q 70 63 110 66 M 200 66 Q 240 63 280 66 M 380 66 Q 420 63 460 66" stroke={dark} strokeWidth="1.2" strokeLinecap="round" opacity="0.25" />
+                    {/* Wave Layer 1 */}
+                    <path d="M0 72 Q 70 65 140 72 T 280 72 T 420 72 T 560 72 L600 72 L600 120 L0 120 Z" fill={dark} opacity="0.10" />
+                    {/* Wave Layer 2 */}
+                    <path d="M0 88 Q 80 78 170 88 T 350 88 T 520 88 L600 88 L600 120 L0 120 Z" fill={dark} opacity="0.16" />
+                    {/* Sandy Coastline */}
+                    <path d="M0 120 L0 100 Q 140 92 270 100 Q 420 106 540 98 L600 100 L600 120 Z" fill={dark} opacity="0.25" />
+                    {/* Left Palm Trees Silhouette */}
+                    <g fill={dark} opacity="0.48">
+                      <path d="M 42 118 Q 45 92 58 74 Q 56 92 45 118 Z" />
+                      <path d="M 58 74 Q 36 64 26 76 Q 40 72 58 74 Z" />
+                      <path d="M 58 74 Q 48 56 44 52 Q 52 60 58 74 Z" />
+                      <path d="M 58 74 Q 64 52 72 54 Q 68 62 58 74 Z" />
+                      <path d="M 58 74 Q 78 64 86 77 Q 74 72 58 74 Z" />
+                      <path d="M 58 74 Q 71 82 78 90 Q 68 84 58 74 Z" />
+                      {/* Secondary palm */}
+                      <path d="M 26 118 Q 28 98 35 85 Q 33 98 28 118 Z" opacity="0.8" />
+                      <path d="M 35 85 Q 20 77 14 87 Q 24 83 35 85 Z" opacity="0.8" />
+                      <path d="M 35 85 Q 30 70 26 66 Q 32 74 35 85 Z" opacity="0.8" />
+                      <path d="M 35 85 Q 43 70 49 74 Q 43 78 35 85 Z" opacity="0.8" />
+                    </g>
+                    {/* Right Palm Trees Silhouette */}
+                    <g fill={dark} opacity="0.45">
+                      <path d="M 560 118 Q 554 94 542 76 Q 548 94 557 118 Z" />
+                      <path d="M 542 76 Q 564 66 574 78 Q 560 74 542 76 Z" />
+                      <path d="M 542 76 Q 552 58 556 54 Q 548 62 542 76 Z" />
+                      <path d="M 542 76 Q 536 54 528 56 Q 532 64 542 76 Z" />
+                      <path d="M 542 76 Q 522 66 514 79 Q 526 74 542 76 Z" />
+                    </g>
+                    {/* Distant Sea Birds */}
+                    <g stroke={dark} strokeWidth="1" fill="none" opacity="0.32">
+                      <path d="M 280 50 Q 284 46 288 50 Q 292 46 296 50" />
+                      <path d="M 312 44 Q 315 41 318 44 Q 321 41 324 44" />
+                    </g>
+                  </svg>
+                )}
               </div>
-
-              {/* ── NOTES — centred ── */}
-              {form.notes.length > 0 && (
-                <div style={{ padding: "9px 32px 13px", borderTop: `1px solid ${dark}12`, zIndex: 1, position: "relative", textAlign: "center" }}>
-                  <div style={{ width: "30px", height: "2px", background: accent, margin: "0 auto 6px", borderRadius: "1px", opacity: 0.55 }} />
-                  {form.notes.map((note, i) => (
-                    <div key={i} style={{ fontSize: "9.5px", color: "#c0392b", lineHeight: 1.7, fontStyle: "italic" }}>
-                      *{note}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Bottom fintech bar */}
-              <div style={{ height: "4px", background: `linear-gradient(to right, ${dark}18, ${accent}99, ${dark}18)`, zIndex: 1, position: "relative" }} />
 
             </div>
             {/* ═══ END POSTER ═══ */}
