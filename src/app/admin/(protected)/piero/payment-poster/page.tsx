@@ -13,14 +13,14 @@ export default async function PieroPaymentPosterPage() {
   await requireAdmin();
   const supabase = createAdminClient();
 
-  // Load Piero site settings from resort_settings (id = 1)
+  // Load Piero site contact details from resort_settings (id = 1)
   const { data: siteSettings } = await supabase
     .from("resort_settings")
-    .select("*")
+    .select("site_phone, site_email")
     .eq("id", 1)
     .maybeSingle();
 
-  // Load poster-specific accounts from payment_poster_settings
+  // Load poster-specific accounts exclusively from payment_poster_settings
   const { data: posterSettings } = await supabase
     .from("payment_poster_settings")
     .select("*")
@@ -33,19 +33,15 @@ export default async function PieroPaymentPosterPage() {
     address: "Sitio Aplaya, Cabangan, Zambales",
     phone: siteSettings?.site_phone || "+63 995 385 5517",
     email: siteSettings?.site_email || "pierobeachresort@gmail.com",
-    logo: "/icon.svg",
+    logo: "/images/logo.svg",
   };
 
   const initialSettings: PaymentPosterSettings = {
     hotel_slug: "piero",
-    bank_name: posterSettings?.bank_name || siteSettings?.bank_name || "BPI",
-    bpi_account_name: posterSettings?.bpi_account_name || siteSettings?.bank_account_name || "Piero Beach Resort Operations",
-    bpi_account_number: posterSettings?.bpi_account_number || siteSettings?.bank_account_number || "1234 5678 9012",
-    gcash_entries: posterSettings?.gcash_entries && posterSettings.gcash_entries.length > 0
-      ? posterSettings.gcash_entries
-      : siteSettings?.gcash_number
-      ? [{ name: siteSettings.gcash_name || "Piero Beach Resort", number: siteSettings.gcash_number }]
-      : [{ name: "Piero Beach Resort", number: "0917 123 4567" }],
+    bank_name: posterSettings?.bank_name || "BPI",
+    bpi_account_name: posterSettings?.bpi_account_name || "",
+    bpi_account_number: posterSettings?.bpi_account_number || "",
+    gcash_entries: posterSettings?.gcash_entries || [],
     notes: posterSettings?.notes && posterSettings.notes.length > 0
       ? posterSettings.notes
       : [

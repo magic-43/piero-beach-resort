@@ -2,9 +2,13 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { Plus, Trash2, Download, CheckCircle2, RefreshCw, RotateCcw, MapPin, Phone, Mail, Info, ShieldCheck, Building2 } from "lucide-react";
+import { Plus, Trash2, Download, Building2, Smartphone } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { updatePaymentPosterSettings } from "@/lib/admin/actions";
+import { Logo } from "@/components/ui/logo";
+
+const POSTER_W = 600;
+const POSTER_H = 600;
 
 export interface PropertyBranding {
   slug: "piero" | "cielo";
@@ -38,12 +42,6 @@ type FormState = {
   notes: string[];
 };
 
-type StatusState = {
-  loading: boolean;
-  message: string;
-  type: "success" | "error" | "";
-};
-
 export default function PaymentPosterClient({
   initialSettings,
   branding,
@@ -51,601 +49,415 @@ export default function PaymentPosterClient({
   initialSettings: PaymentPosterSettings;
   branding: PropertyBranding;
 }) {
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewRef   = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [mobileTab, setMobileTab] = useState<"form" | "preview">("form");
-  const [scale, setScale] = useState(1);
-  const [posterHeight, setPosterHeight] = useState(650);
+  const [scale, setScale]             = useState(0.85);
+  const [mobileTab, setMobileTab]     = useState<"form" | "preview">("form");
   const [isExporting, setIsExporting] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<StatusState>({ loading: false, message: "", type: "" });
+  const [saveStatus, setSaveStatus]   = useState<{
+    loading: boolean; message: string; type: "success" | "error" | "";
+  }>({ loading: false, message: "", type: "" });
 
-  const initialForm: FormState = {
-    bankName: initialSettings.bank_name || "BPI",
-    bpiAccountName: initialSettings.bpi_account_name || "",
+  const [form, setForm] = useState<FormState>({
+    bankName:         initialSettings.bank_name         || "BPI",
+    bpiAccountName:   initialSettings.bpi_account_name   || "",
     bpiAccountNumber: initialSettings.bpi_account_number || "",
-    gcashEntries: initialSettings.gcash_entries || [],
-    notes: initialSettings.notes || [],
-  };
+    gcashEntries:     initialSettings.gcash_entries     || [],
+    notes:            initialSettings.notes             || [],
+  });
 
-  const [form, setForm] = useState<FormState>(initialForm);
-
-  // ResizeObserver to scale down the 600px canvas to fit on mobile/smaller screens seamlessly
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
+    const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const availableWidth = entry.contentRect.width;
-        if (availableWidth > 0) {
-          // Canvas is fixed at 600px width with 24px safe padding margin
-          const targetScale = Math.min((availableWidth - 24) / 600, 1.0);
-          setScale(Math.max(targetScale, 0.35));
-        }
+        const w = entry.contentRect.width;
+        if (w > 0) setScale(Math.max(Math.min((w - 32) / POSTER_W, 0.85), 0.35));
       }
     });
-
-    resizeObserver.observe(container);
-    return () => resizeObserver.disconnect();
+    ro.observe(container);
+    return () => ro.disconnect();
   }, []);
 
-  // Measure dynamic height of poster to collapse unused container space
-  useEffect(() => {
-    const poster = previewRef.current;
-    if (!poster) return;
-
-    const heightObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setPosterHeight(entry.contentRect.height);
-      }
-    });
-
-    heightObserver.observe(poster);
-    return () => heightObserver.disconnect();
-  }, []);
-
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  }, []);
+    setForm((p) => ({ ...p, [name]: value }));
+  };
 
-  const addGcashEntry = useCallback(() => {
-    setForm((prev) => ({
-      ...prev,
-      gcashEntries: [...prev.gcashEntries, { number: "", name: "" }],
-    }));
-  }, []);
+  const addGcash    = () => setForm((p) => ({ ...p, gcashEntries: [...p.gcashEntries, { number: "", name: "" }] }));
+  const removeGcash = (i: number) => setForm((p) => ({ ...p, gcashEntries: p.gcashEntries.filter((_, idx) => idx !== i) }));
+  const updateGcash = (i: number, field: keyof GcashEntry, val: string) =>
+    setForm((p) => ({ ...p, gcashEntries: p.gcashEntries.map((e, idx) => idx === i ? { ...e, [field]: val } : e) }));
 
-  const removeGcashEntry = useCallback((index: number) => {
-    setForm((prev) => ({
-      ...prev,
-      gcashEntries: prev.gcashEntries.filter((_, i) => i !== index),
-    }));
-  }, []);
+  const addNote    = () => setForm((p) => ({ ...p, notes: [...p.notes, ""] }));
+  const removeNote = (i: number) => setForm((p) => ({ ...p, notes: p.notes.filter((_, idx) => idx !== i) }));
+  const updateNote = (i: number, val: string) =>
+    setForm((p) => ({ ...p, notes: p.notes.map((n, idx) => idx === i ? val : n) }));
 
-  const updateGcashEntry = useCallback((index: number, field: keyof GcashEntry, value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      gcashEntries: prev.gcashEntries.map((entry, i) =>
-        i === index ? { ...entry, [field]: value } : entry
-      ),
-    }));
-  }, []);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveStatus({ loading: true, message: "", type: "" });
+    try {
+      const result = await updatePaymentPosterSettings({
+        hotelSlug: branding.slug,
+        bankName:  form.bankName,
+        bpiAccountName:   form.bpiAccountName,
+        bpiAccountNumber: form.bpiAccountNumber,
+        gcashEntries: form.gcashEntries,
+        notes: form.notes,
+      });
+      if (result?.error) throw new Error(result.error);
+      setSaveStatus({ loading: false, message: "Settings saved successfully.", type: "success" });
+    } catch (err: unknown) {
+      setSaveStatus({ loading: false, message: err instanceof Error ? err.message : "Failed to save.", type: "error" });
+    }
+  };
 
-  const addNote = useCallback(() => {
-    setForm((prev) => ({
-      ...prev,
-      notes: [...prev.notes, ""],
-    }));
-  }, []);
-
-  const removeNote = useCallback((index: number) => {
-    setForm((prev) => ({
-      ...prev,
-      notes: prev.notes.filter((_, i) => i !== index),
-    }));
-  }, []);
-
-  const updateNote = useCallback((index: number, value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      notes: prev.notes.map((note, i) => (i === index ? value : note)),
-    }));
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setForm(initialForm);
-    setSaveStatus({ loading: false, message: "", type: "" });
-  }, [initialForm]);
-
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setSaveStatus({ loading: true, message: "", type: "" });
-
-      try {
-        const result = await updatePaymentPosterSettings({
-          hotelSlug: branding.slug,
-          bankName: form.bankName,
-          bpiAccountName: form.bpiAccountName,
-          bpiAccountNumber: form.bpiAccountNumber,
-          gcashEntries: form.gcashEntries,
-          notes: form.notes,
-        });
-
-        if (result?.error) {
-          throw new Error(result.error);
-        }
-
-        setSaveStatus({ loading: false, message: "Poster settings saved successfully!", type: "success" });
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setSaveStatus({ loading: false, message: err.message, type: "error" });
-        } else {
-          setSaveStatus({ loading: false, message: "Failed to save settings.", type: "error" });
-        }
-      }
-    },
-    [branding.slug, form]
-  );
+  const isCielo = branding.slug === "cielo";
+  const dark   = isCielo ? "#14331e" : "#132c4a";
+  const accent = isCielo ? "#c8922e" : "#c4a47c";
+  const bg     = isCielo ? "#F5F1E6" : "#F3EFE4";
+  const muted  = isCielo ? "#3a6b4a" : "#3a5278";
+  const slug   = branding.slug;
 
   const handleDownloadPng = useCallback(async () => {
     if (!previewRef.current) return;
-
     setIsExporting(true);
     try {
-      const bgColor = branding.slug === "cielo" ? "#14331e" : "#132c4a";
       const dataUrl = await htmlToImage.toPng(previewRef.current, {
         quality: 1.0,
-        pixelRatio: 2, // High resolution output
-        backgroundColor: bgColor,
+        pixelRatio: 2,
+        backgroundColor: bg,
+        width: POSTER_W,
+        height: POSTER_H,
       });
-
       const link = document.createElement("a");
       link.download = `Payment_Poster_${branding.name.replace(/\s+/g, "_")}.png`;
       link.href = dataUrl;
       link.click();
-    } catch (error) {
-      console.error("Failed to export PNG:", error);
+    } catch (err) {
+      console.error(err);
       alert("Failed to export PNG. Please try again.");
     } finally {
       setIsExporting(false);
     }
-  }, [branding.name, branding.slug]);
-
-  const isCielo = branding.slug === "cielo";
-  const themeBg = isCielo ? "bg-[#14331e]" : "bg-[#132c4a]";
-  const themeAccent = isCielo ? "text-[#d1a877]" : "text-[#c4a47c]";
-  const themeHeader = isCielo ? "text-[#CDE3D5]" : "text-[#B9CEC3]";
+  }, [branding.name, bg]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start relative lg:max-h-[calc(100vh-8rem)]">
-      {/* Mobile Tabs Toggle */}
+
+      {/* Mobile Tabs */}
       <div className="w-full sticky top-0 z-50 bg-resort-offwhite/95 backdrop-blur-sm pt-2 pb-3 mb-2 lg:hidden print:hidden">
         <div className="flex bg-resort-sand/30 rounded-lg p-1.5 gap-1 shadow-sm">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              setMobileTab("form");
-            }}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-md transition-all ${
-              mobileTab === "form" ? "bg-white shadow-sm text-resort-cocoa" : "text-resort-cocoa/60 hover:text-resort-cocoa"
-            }`}
-          >
-            Edit Accounts &amp; Notes
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              setMobileTab("preview");
-            }}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-md transition-all ${
-              mobileTab === "preview" ? "bg-white shadow-sm text-resort-cocoa" : "text-resort-cocoa/60 hover:text-resort-cocoa"
-            }`}
-          >
-            View Poster Preview
-          </button>
+          {(["form", "preview"] as const).map((tab) => (
+            <button key={tab} onClick={(e) => { e.preventDefault(); setMobileTab(tab); }}
+              className={`flex-1 py-2.5 text-sm font-bold rounded-md transition-all ${mobileTab === tab ? "bg-white shadow-sm text-resort-terracotta" : "text-resort-cocoa/60 hover:text-resort-cocoa/80"}`}>
+              {tab === "form" ? "Edit Details" : "View Preview"}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ─────────────────────── LEFT: FORM SETTINGS COLUMN ─────────────────────── */}
-      <div
-        className={`w-full lg:w-1/2 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto bg-resort-white rounded-xl p-6 sm:p-8 shadow-sm border border-resort-cocoa/10 print:hidden lg:pr-6 ${
-          mobileTab === "form" ? "block" : "hidden lg:block"
-        }`}
-      >
-        <div className="border-b border-resort-cocoa/10 pb-4 mb-6 sticky top-0 bg-resort-white z-10 flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-serif font-bold text-resort-cocoa">
-              Poster Payment Accounts
-            </h2>
-            <p className="text-xs text-resort-cocoa/70 mt-1">
-              Configure official GCash and Bank accounts displayed on the download poster.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-resort-cocoa/20 text-resort-cocoa rounded-lg text-xs hover:bg-resort-sand/20 transition font-medium shrink-0 cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" /> Reset
-          </button>
+      {/* Form Section */}
+      <div className={`w-full lg:w-1/2 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto bg-resort-white rounded-lg p-6 shadow-sm border border-resort-cocoa/10 print:hidden lg:pr-4 ${mobileTab === "form" ? "block" : "hidden lg:block"}`}>
+        <div className="border-b border-resort-cocoa/10 pb-4 mb-6 sticky top-0 bg-resort-white z-10">
+          <h2 className="text-xl font-serif text-resort-cocoa">Payment Poster Settings</h2>
+          <p className="text-sm text-resort-cocoa/60 mt-1">Update payment account details for {branding.name}.</p>
         </div>
 
-        {/* Auto-Connected Site Info Banner */}
-        <div className="mb-6 p-4 rounded-xl bg-resort-offwhite border border-resort-cocoa/10 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-resort-cocoa">
-            <Info className="w-4 h-4 text-resort-olive shrink-0" />
-            <span>Synced with {branding.name} Settings</span>
-          </div>
-          <p className="text-xs text-resort-cocoa/70 leading-relaxed">
-            Resort Name, Address, Contact Phone, and Email are automatically pulled from your site settings.
-          </p>
-          <div className="pt-2 border-t border-resort-cocoa/10 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-resort-cocoa/80">
-            <div className="flex items-center gap-1.5 truncate">
-              <MapPin className="w-3 h-3 text-resort-cocoa/50 shrink-0" />
-              <span className="truncate">{branding.address}</span>
-            </div>
-            <div className="flex items-center gap-1.5 truncate">
-              <Phone className="w-3 h-3 text-resort-cocoa/50 shrink-0" />
-              <span>{branding.phone}</span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:col-span-2 truncate">
-              <Mail className="w-3 h-3 text-resort-cocoa/50 shrink-0" />
-              <span>{branding.email}</span>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {saveStatus.message && (
-            <div
-              className={`p-4 text-sm rounded-xl flex items-center gap-2 ${
-                saveStatus.type === "error"
-                  ? "bg-red-50 text-red-700 border border-red-200"
-                  : "bg-green-50 text-green-700 border border-green-200"
-              }`}
-            >
-              {saveStatus.type === "success" ? <CheckCircle2 className="w-5 h-5 shrink-0 text-green-600" /> : null}
-              <span>{saveStatus.message}</span>
+            <div className={`p-3.5 text-sm rounded-lg ${saveStatus.type === "error" ? "bg-red-50 text-red-700 border border-red-200" : "bg-green-50 text-green-700 border border-green-200"}`}>
+              {saveStatus.message}
             </div>
           )}
 
-          {/* GCash Accounts */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                <h3 className="font-bold text-xs uppercase tracking-wider text-resort-cocoa">
-                  GCash Accounts
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={addGcashEntry}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-resort-sand/30 text-resort-cocoa rounded-lg text-xs font-bold hover:bg-resort-sand/50 transition-colors cursor-pointer"
-              >
+          <div>
+            <h3 className="font-medium text-resort-terracotta mb-4 uppercase text-sm tracking-wider flex items-center gap-2">
+              <Smartphone className="w-4 h-4" /> GCash Accounts
+            </h3>
+            <div className="space-y-2">
+              {form.gcashEntries.length === 0 && <p className="text-xs text-resort-cocoa/50 py-2">No GCash accounts added yet.</p>}
+              {form.gcashEntries.map((entry, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input type="text" value={entry.name} onChange={(e) => updateGcash(i, "name", e.target.value)} className="mt-1 block w-full rounded border-resort-cocoa/20 p-2 border text-sm" placeholder="Account Name" />
+                  <input type="text" value={entry.number} onChange={(e) => updateGcash(i, "number", e.target.value)} className="mt-1 block w-full rounded border-resort-cocoa/20 p-2 border text-sm font-mono" placeholder="09XX XXX XXXX" />
+                  <button type="button" onClick={() => removeGcash(i)} className="p-1.5 text-resort-cocoa/40 hover:text-red-600 rounded transition cursor-pointer shrink-0"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+              <button type="button" onClick={addGcash} className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-resort-sand/30 text-resort-cocoa hover:bg-resort-sand/60 rounded transition cursor-pointer mt-2">
                 <Plus className="w-3.5 h-3.5" /> Add GCash
               </button>
             </div>
-
-            {form.gcashEntries.length === 0 ? (
-              <p className="text-xs text-resort-cocoa/50 text-center py-4 bg-resort-offwhite rounded-xl border border-dashed border-resort-cocoa/20">
-                No GCash accounts added yet. Click &quot;Add GCash&quot; above.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {form.gcashEntries.map((entry, index) => (
-                  <div key={index} className="flex items-end gap-3 p-3.5 bg-resort-offwhite rounded-xl border border-resort-cocoa/10">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-resort-cocoa/70 mb-1">
-                          Account Name
-                        </label>
-                        <input
-                          type="text"
-                          value={entry.name}
-                          onChange={(e) => updateGcashEntry(index, "name", e.target.value)}
-                          className="w-full p-2.5 bg-resort-white border border-resort-cocoa/20 rounded-lg text-sm font-medium focus:outline-none focus:ring-1 focus:ring-resort-olive"
-                          placeholder="e.g. Maria S."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-resort-cocoa/70 mb-1">
-                          GCash Number
-                        </label>
-                        <input
-                          type="text"
-                          value={entry.number}
-                          onChange={(e) => updateGcashEntry(index, "number", e.target.value)}
-                          className="w-full p-2.5 bg-resort-white border border-resort-cocoa/20 rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-resort-olive"
-                          placeholder="09XX XXX XXXX"
-                        />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeGcashEntry(index)}
-                      className="p-2.5 text-resort-cocoa/50 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                      title="Remove GCash"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* Bank Transfer Details */}
-          <div className="space-y-4 pt-4 border-t border-resort-cocoa/10">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-resort-olive" />
-              <h3 className="font-bold text-xs uppercase tracking-wider text-resort-cocoa">
-                Bank Transfer Details
-              </h3>
-            </div>
-
+          <div>
+            <h3 className="font-medium text-resort-terracotta mb-4 uppercase text-sm tracking-wider flex items-center gap-2">
+              <Building2 className="w-4 h-4" /> Bank Transfer Details
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-resort-cocoa/70 mb-1">
-                  Bank Name
-                </label>
-                <input
-                  type="text"
-                  name="bankName"
-                  value={form.bankName}
-                  onChange={handleChange}
-                  className="w-full p-3 bg-resort-offwhite border border-resort-cocoa/20 rounded-xl text-sm font-medium focus:ring-2 focus:ring-resort-olive focus:outline-none"
-                  placeholder="e.g. BPI, BDO, UnionBank"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-resort-cocoa/70 mb-1">
-                  Account Name
-                </label>
-                <input
-                  type="text"
-                  name="bpiAccountName"
-                  value={form.bpiAccountName}
-                  onChange={handleChange}
-                  className="w-full p-3 bg-resort-offwhite border border-resort-cocoa/20 rounded-xl text-sm font-medium focus:ring-2 focus:ring-resort-olive focus:outline-none"
-                  placeholder="Account Holder Name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-resort-cocoa/70 mb-1">
-                  Account Number
-                </label>
-                <input
-                  type="text"
-                  name="bpiAccountNumber"
-                  value={form.bpiAccountNumber}
-                  onChange={handleChange}
-                  className="w-full p-3 bg-resort-offwhite border border-resort-cocoa/20 rounded-xl text-sm font-mono focus:ring-2 focus:ring-resort-olive focus:outline-none"
-                  placeholder="1234 5678 9012"
-                />
-              </div>
+              <label className="block sm:col-span-2">
+                <span className="text-sm text-resort-cocoa/70">Bank Name</span>
+                <input type="text" name="bankName" value={form.bankName} onChange={handleChange} className="mt-1 block w-full rounded border-resort-cocoa/20 p-2 border" placeholder="BPI, BDO, UnionBank..." />
+              </label>
+              <label className="block">
+                <span className="text-sm text-resort-cocoa/70">Account Name</span>
+                <input type="text" name="bpiAccountName" value={form.bpiAccountName} onChange={handleChange} className="mt-1 block w-full rounded border-resort-cocoa/20 p-2 border" placeholder="Account Holder Name" />
+              </label>
+              <label className="block">
+                <span className="text-sm text-resort-cocoa/70">Account Number</span>
+                <input type="text" name="bpiAccountNumber" value={form.bpiAccountNumber} onChange={handleChange} className="mt-1 block w-full rounded border-resort-cocoa/20 p-2 border font-mono" placeholder="1234 5678 9012" />
+              </label>
             </div>
           </div>
 
-          {/* Important Notices & Guidelines */}
-          <div className="space-y-4 pt-4 border-t border-resort-cocoa/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-resort-olive" />
-                <h3 className="font-bold text-xs uppercase tracking-wider text-resort-cocoa">
-                  Payment Notices &amp; Guidelines
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={addNote}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-resort-sand/30 text-resort-cocoa rounded-lg text-xs font-bold hover:bg-resort-sand/50 transition-colors cursor-pointer"
-              >
+          <div>
+            <h3 className="font-medium text-resort-terracotta mb-4 uppercase text-sm tracking-wider">Poster Notes</h3>
+            <div className="space-y-2">
+              {form.notes.length === 0 && <p className="text-xs text-resort-cocoa/50 py-2">No notes added yet.</p>}
+              {form.notes.map((note, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input type="text" value={note} onChange={(e) => updateNote(i, e.target.value)} className="mt-1 block w-full rounded border-resort-cocoa/20 p-2 border text-sm" placeholder="e.g. Full payment required upon reservation." />
+                  <button type="button" onClick={() => removeNote(i)} className="p-1.5 text-resort-cocoa/40 hover:text-red-600 rounded transition cursor-pointer shrink-0"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+              <button type="button" onClick={addNote} className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-resort-sand/30 text-resort-cocoa hover:bg-resort-sand/60 rounded transition cursor-pointer mt-2">
                 <Plus className="w-3.5 h-3.5" /> Add Note
               </button>
             </div>
-
-            {form.notes.length === 0 ? (
-              <p className="text-xs text-resort-cocoa/50 text-center py-4 bg-resort-offwhite rounded-xl border border-dashed border-resort-cocoa/20">
-                No notes added. Click &quot;Add Note&quot; above.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {form.notes.map((note, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-resort-offwhite rounded-xl border border-resort-cocoa/10">
-                    <textarea
-                      value={note}
-                      onChange={(e) => updateNote(index, e.target.value)}
-                      className="flex-1 p-2.5 bg-resort-white border border-resort-cocoa/20 rounded-lg text-xs font-medium focus:outline-none resize-none"
-                      placeholder="Enter guest instructions or payment notices..."
-                      rows={2}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeNote(index)}
-                      className="p-2.5 text-resort-cocoa/50 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                      title="Remove Note"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* Submit Button */}
-          <div className="pt-4 border-t border-resort-cocoa/10">
-            <button
-              type="submit"
-              disabled={saveStatus.loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-resort-olive text-resort-white font-bold rounded-xl shadow-md hover:bg-resort-cocoa transition-colors disabled:opacity-50 cursor-pointer text-sm"
-            >
-              {saveStatus.loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Saving Poster Accounts...</span>
-                </>
-              ) : (
-                <span>Save Poster Accounts</span>
-              )}
+          <div className="pt-3 border-t border-resort-cocoa/10">
+            <button type="submit" disabled={saveStatus.loading} className="w-full py-2.5 bg-resort-cocoa text-white font-medium rounded text-sm hover:bg-resort-cocoa/90 transition disabled:opacity-50 cursor-pointer">
+              {saveStatus.loading ? "Saving..." : "Save Settings"}
             </button>
           </div>
         </form>
       </div>
 
-      {/* ─────────────────────── RIGHT: PREVIEW COLUMN (MATCHING MANUAL CONFIRMATION) ─────────────────────── */}
-      <div
-        className={`w-full lg:w-1/2 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto flex flex-col items-center bg-resort-white rounded-xl p-6 sm:p-8 shadow-sm border border-resort-cocoa/10 print:border-none print:p-0 ${
-          mobileTab === "preview" ? "block" : "hidden lg:block"
-        }`}
-      >
-        {/* Action Header */}
-        <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-resort-cocoa/10 mb-6 print:hidden">
-          <div>
-            <h2 className="text-xl font-serif font-bold text-resort-cocoa">Live Poster Preview</h2>
-            <span className="text-xs text-resort-cocoa/60">
-              Fixed 600px canvas &middot; 2x Ultra-Crisp PNG Download
-            </span>
-          </div>
+      {/* Preview Section */}
+      <div className={`w-full lg:w-1/2 flex-col items-center print:block lg:sticky lg:top-0 ${mobileTab === "preview" ? "flex" : "hidden lg:flex"}`}>
+        <div ref={containerRef} className="w-full flex justify-center overflow-hidden transition-all duration-200" style={{ height: `${POSTER_H * scale}px` }}>
+          <div style={{ transform: `scale(${scale})`, transformOrigin: "top center", width: `${POSTER_W}px`, height: `${POSTER_H}px`, flexShrink: 0 }}>
 
-          <button
-            type="button"
-            onClick={handleDownloadPng}
-            disabled={isExporting}
-            className="flex items-center gap-2 bg-[#c4a47c] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-[#b0936e] transition cursor-pointer disabled:opacity-50 shrink-0"
-          >
-            <Download className="w-4 h-4" />
-            <span>{isExporting ? "Exporting..." : "Download PNG"}</span>
-          </button>
-        </div>
+            {/* ═══ POSTER 600x600 ═══ */}
+            <div ref={previewRef} style={{ fontFamily: "Arial, sans-serif", width: `${POSTER_W}px`, height: `${POSTER_H}px`, background: bg, color: dark, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
 
-        {/* Scaling Container Wrapper (Identical to Manual Confirmation) */}
-        <div
-          ref={containerRef}
-          className="w-full flex justify-center overflow-hidden transition-all duration-200"
-          style={{ height: `${posterHeight * scale}px` }}
-        >
-          <div style={{ transform: `scale(${scale})`, transformOrigin: "top center", width: "600px", height: "fit-content" }}>
-            {/* Printable Canvas Area (Always exactly 600px wide) */}
-            <div
-              id="printable-payment-poster"
-              ref={previewRef}
-              className={`${themeBg} text-white w-[600px] min-h-[620px] shadow-2xl p-8 rounded-2xl flex flex-col justify-between relative overflow-hidden`}
-              style={{ fontFamily: "var(--font-sans), sans-serif" }}
-            >
-              {/* Header */}
-              <div>
-                <div className="text-center mb-6">
-                  {branding.logo && (
-                    <div className="mb-4 flex justify-center">
-                      <div className="relative w-16 h-16 rounded-xl overflow-hidden p-1 flex items-center justify-center">
-                        <Image
-                          src={branding.logo}
-                          alt={branding.name}
-                          fill
-                          className="object-contain"
-                          sizes="64px"
-                          unoptimized
-                        />
-                      </div>
-                    </div>
-                  )}
+              {/* Dot grid background */}
+              <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }} viewBox="0 0 600 600">
+                {Array.from({ length: 9 }).flatMap((_, row) =>
+                  Array.from({ length: 14 }).map((_, col) => (
+                    <circle key={`${row}-${col}`} cx={col * 44 + 10} cy={row * 44 + 10} r="1.3" fill={dark} opacity="0.045" />
+                  ))
+                )}
+                <path d="M0 0 L160 0 C90 18 18 90 0 160 Z" fill={dark} opacity="0.03" />
+                <path d="M0 0 L110 0 C60 12 12 60 0 110 Z" fill={accent} opacity="0.055" />
+                <path d="M600 600 L440 600 C510 582 582 510 600 440 Z" fill={dark} opacity="0.025" />
+                <path d="M600 600 L490 600 C545 588 588 545 600 490 Z" fill={accent} opacity="0.045" />
+              </svg>
 
-                  <h1 className={`font-serif text-3xl font-bold ${themeHeader} tracking-wider uppercase`}>
+              {/* ── HEADER ── */}
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 22px 13px", borderBottom: `1.5px solid ${dark}18`, zIndex: 1, position: "relative" }}>
+                {branding.slug === "piero" ? (
+                  <div style={{ width: "72px", flexShrink: 0 }}>
+                    <Logo className="w-full h-auto" />
+                  </div>
+                ) : (
+                  <div style={{ width: "66px", height: "66px", flexShrink: 0, position: "relative", borderRadius: "10px", overflow: "hidden", border: `1.5px solid ${dark}20` }}>
+                    <Image src={branding.logo} alt={branding.name} fill style={{ objectFit: "contain" }} sizes="66px" unoptimized />
+                  </div>
+                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "20px", fontWeight: 900, letterSpacing: "0.05em", textTransform: "uppercase", color: dark, lineHeight: 1.1, marginBottom: "4px" }}>
                     {branding.name}
-                  </h1>
-
-                  {branding.address && (
-                    <p className="text-xs text-white/80 mt-1.5">{branding.address}</p>
-                  )}
-
-                  {(branding.phone || branding.email) && (
-                    <p className="text-xs text-white/70 mt-1">
-                      {branding.phone}
-                      {branding.phone && branding.email && " \u00b7 "}
-                      {branding.email}
-                    </p>
-                  )}
-                </div>
-
-                {/* Section Title */}
-                <div className="text-center my-6 py-2 border-y border-white/15">
-                  <h2 className={`text-xs font-bold tracking-[0.25em] ${themeAccent} uppercase`}>
-                    OFFICIAL PAYMENT DETAILS
-                  </h2>
-                </div>
-
-                {/* GCash Section */}
-                {form.gcashEntries.length > 0 && (
-                  <div className="mb-5 space-y-2">
-                    <div className="text-xs font-bold text-white/90 uppercase tracking-wider border-b border-white/10 pb-1 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-blue-400" />
-                        <span>GCash Transfer</span>
-                      </div>
-                      <span className="text-[10px] text-amber-200">Verified Account</span>
-                    </div>
-
-                    <div className="space-y-2 pt-1">
-                      {form.gcashEntries.map((entry, index) => (
-                        <div key={index} className="bg-white/10 p-3.5 rounded-xl flex items-center justify-between">
-                          <div>
-                            <p className="text-xs font-bold text-white">{entry.name || "Account Name"}</p>
-                            <p className={`text-base font-mono font-bold ${themeAccent}`}>{entry.number || "09XX XXX XXXX"}</p>
-                          </div>
-                          <span className="text-[10px] uppercase font-bold px-2.5 py-1 rounded bg-blue-500/30 text-blue-200">
-                            GCash
-                          </span>
-                        </div>
-                      ))}
-                    </div>
                   </div>
-                )}
-
-                {/* Bank Transfer Section */}
-                {(form.bpiAccountName || form.bpiAccountNumber) && (
-                  <div className="mb-5 space-y-2">
-                    <div className="text-xs font-bold text-white/90 uppercase tracking-wider border-b border-white/10 pb-1 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <Building2 className="w-3 h-3 text-amber-200" />
-                        <span>Online Bank Transfer ({form.bankName || "Bank"})</span>
-                      </div>
-                      <span className="text-[10px] text-amber-200">Direct Deposit</span>
-                    </div>
-
-                    <div className="bg-white/10 p-3.5 rounded-xl space-y-1">
-                      <p className="text-[11px] text-white/70">Account Name:</p>
-                      <p className="text-sm font-bold text-white">{form.bpiAccountName || "Account Holder Name"}</p>
-                      <p className="text-[11px] text-white/70 mt-2">Account Number:</p>
-                      <p className={`text-base font-mono font-bold ${themeAccent}`}>{form.bpiAccountNumber || "0000 0000 0000"}</p>
-                    </div>
+                  {branding.address && <div style={{ fontSize: "10px", color: muted, fontWeight: 500, marginBottom: "2px" }}>{branding.address}</div>}
+                  <div style={{ fontSize: "10px", color: muted, opacity: 0.82 }}>
+                    {branding.phone && `Contact No.: ${branding.phone}`}
+                    {branding.phone && branding.email && "  |  "}
+                    {branding.email && `Email: ${branding.email}`}
                   </div>
-                )}
+                </div>
+                <div style={{ width: "3px", height: "52px", borderRadius: "2px", background: `linear-gradient(to bottom, ${accent}, ${accent}33)`, flexShrink: 0 }} />
               </div>
 
-              {/* Footer Notes Section */}
+              {/* ── TITLE ── */}
+              <div style={{ textAlign: "center", padding: "9px 24px 11px", background: `${dark}06`, borderBottom: `1px solid ${dark}10`, zIndex: 1, position: "relative" }}>
+                <div style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "0.28em", textTransform: "uppercase", color: dark }}>Mode of Payment</div>
+                <div style={{ width: "40px", height: "2.5px", background: accent, margin: "5px auto 0", borderRadius: "2px" }} />
+              </div>
+
+              {/* ── BODY ── */}
+              {/* The outer body is position:relative overflow:hidden — clips the phone bleed */}
+              <div style={{ display: "flex", flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
+
+                {/* 
+                  PHONE — positioned absolutely so we control exactly how much bleeds off left.
+                  Left edge of phone sits at x=-48 (48px off-screen left = dramatic slide-in effect).
+                  Phone itself is 140px wide in SVG space, so ~66px of visible phone shows.
+                */}
+                <div style={{ position: "absolute", left: "-48px", top: 0, bottom: 0, width: "310px", display: "flex", alignItems: "center" }}>
+                  <svg
+                    width="310"
+                    height="410"
+                    viewBox="0 0 310 410"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    style={{ overflow: "visible" }}
+                  >
+                    <defs>
+                      <linearGradient id={`pg${slug}`} x1="0" y1="0" x2="0.4" y2="1">
+                        <stop offset="0%" stopColor={dark} />
+                        <stop offset="100%" stopColor={dark} stopOpacity="0.75" />
+                      </linearGradient>
+                      <linearGradient id={`cg${slug}`} x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor={accent} stopOpacity="0.98" />
+                        <stop offset="100%" stopColor={dark} stopOpacity="0.9" />
+                      </linearGradient>
+                      <filter id={`sh${slug}`} x="-30%" y="-15%" width="160%" height="140%">
+                        <feDropShadow dx="8" dy="14" stdDeviation="14" floodColor={dark} floodOpacity="0.22" />
+                      </filter>
+                    </defs>
+
+                    {/* ── PHONE — starts at x=5, takes up x=5..155 (150px wide, 360px tall) ── */}
+                    <rect x="5" y="15" width="150" height="360" rx="26" ry="26" fill={`url(#pg${slug})`} filter={`url(#sh${slug})`} />
+                    {/* Shine half */}
+                    <rect x="5" y="15" width="75"  height="360" rx="26" ry="26" fill="white" opacity="0.04" />
+                    {/* Screen */}
+                    <rect x="18" y="38" width="124" height="292" rx="10" ry="10" fill="#eaf1f8" />
+                    {/* Notch */}
+                    <rect x="56" y="22" width="48" height="11" rx="5.5" ry="5.5" fill={dark} opacity="0.55" />
+                    {/* Home bar */}
+                    <rect x="58" y="370" width="44" height="6" rx="3" ry="3" fill="white" opacity="0.2" />
+
+                    {/* ── Card on screen ── */}
+                    <g transform="translate(22,50) rotate(-6)">
+                      <rect width="112" height="72" rx="11" ry="11" fill={`url(#cg${slug})`} />
+                      <rect width="56"  height="72" rx="11" ry="11" fill="white" opacity="0.05" />
+                      {/* Chip */}
+                      <rect x="11" y="16" width="22" height="17" rx="3.5" ry="3.5" fill={accent} />
+                      <line x1="16" y1="16" x2="16" y2="33" stroke={dark} strokeWidth="1" opacity="0.35" />
+                      <line x1="11" y1="24.5" x2="33" y2="24.5" stroke={dark} strokeWidth="1" opacity="0.35" />
+                      {/* Number dots */}
+                      <g fill="white" opacity="0.5">
+                        <circle cx="11" cy="55" r="2.5"/><circle cx="19" cy="55" r="2.5"/><circle cx="27" cy="55" r="2.5"/>
+                        <circle cx="39" cy="55" r="2.5"/><circle cx="47" cy="55" r="2.5"/>
+                        <circle cx="59" cy="55" r="2.5"/><circle cx="67" cy="55" r="2.5"/>
+                        <circle cx="79" cy="55" r="2.5"/><circle cx="87" cy="55" r="2.5"/>
+                      </g>
+                      {/* NFC */}
+                      <path d="M90 12 Q101 21 101 33 M93 16 Q101 24 101 33 M97 21 Q101 26 101 33" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity="0.6" />
+                    </g>
+
+                    {/* ── Success button ── */}
+                    <rect x="28" y="236" width="104" height="28" rx="14" ry="14" fill={dark} opacity="0.78" />
+                    <path d="M 52 250 L 63 261 L 84 239" stroke={accent} strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+
+                    {/* ── Floating coin (overlaps right edge of phone) — peso as paths ── */}
+                    <circle cx="195" cy="260" r="40" fill={`url(#cg${slug})`} filter={`url(#sh${slug})`} />
+                    <circle cx="195" cy="260" r="34" fill="none" stroke="white" strokeWidth="1.8" opacity="0.2" />
+                    {/* Peso P vertical stroke */}
+                    <line   x1="191" y1="242" x2="191" y2="280" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                    {/* Peso P bowl */}
+                    <path   d="M191 242 Q206 242 210 251 Q214 260 207 266 Q201 270 191 269" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Peso horizontal bars */}
+                    <line   x1="183" y1="254" x2="210" y2="254" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                    <line   x1="183" y1="262" x2="210" y2="262" stroke="white" strokeWidth="3" strokeLinecap="round" />
+
+                    {/* ── GCash badge (overlapping phone's right edge) ── */}
+                    <rect x="108" y="188" width="76" height="30" rx="15" ry="15" fill={accent} />
+                    <text x="146" y="208" textAnchor="middle" fill="white" fontSize="12.5" fontWeight="800" letterSpacing="0.5" fontFamily="Arial, sans-serif">GCash</text>
+
+                    {/* Accent dots */}
+                    <rect x="230" y="152" width="11" height="11" transform="rotate(45 235.5 157.5)" fill={accent} opacity="0.45" />
+                    <rect x="236" y="315" width="9"  height="9"  transform="rotate(45 240.5 319.5)" fill={dark}  opacity="0.1" />
+                    <circle cx="255" cy="192" r="5"   fill={accent} opacity="0.45" />
+                    <circle cx="264" cy="178" r="3"   fill={dark}  opacity="0.1" />
+                    <circle cx="272" cy="350" r="4"   fill={accent} opacity="0.25" />
+
+                    {/* Flow curves */}
+                    <path d="M 5 390 Q 100 360 190 385 Q 250 400 305 375" fill="none" stroke={accent} strokeWidth="1.8" opacity="0.2" />
+                    <path d="M 5 400 Q 100 372 190 397 Q 250 410 305 385" fill="none" stroke={dark}   strokeWidth="1"   opacity="0.06" />
+                  </svg>
+                </div>
+
+                {/* ── Payment Details (right column) ── */}
+                <div style={{ marginLeft: "272px", flex: 1, display: "flex", flexDirection: "column", gap: "16px", justifyContent: "center", paddingRight: "26px" }}>
+
+                  {form.gcashEntries.length > 0 && (
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: dark, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 3px 8px ${dark}30` }}>
+                          <span style={{ color: accent, fontSize: "15px", fontWeight: 900 }}>G</span>
+                        </div>
+                        <span style={{ fontSize: "22px", fontWeight: 800, color: dark, letterSpacing: "-0.01em" }}>Gcash</span>
+                      </div>
+                      <div style={{ paddingLeft: "10px", borderLeft: `3px solid ${accent}`, display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {form.gcashEntries.map((entry, i) => (
+                          <div key={i} style={{ fontSize: "12px", color: dark, lineHeight: 1.5 }}>
+                            <span style={{ fontFamily: "Courier New, monospace", letterSpacing: "0.04em" }}>{entry.number || "09XX XXX XXXX"}</span>
+                            {entry.name && <span style={{ fontWeight: 700 }}> - {entry.name}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(form.bpiAccountName || form.bpiAccountNumber) && (
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: dark, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 3px 8px ${dark}30` }}>
+                          <span style={{ color: accent, fontSize: "12px", fontWeight: 900 }}>B</span>
+                        </div>
+                        <span style={{ fontSize: "22px", fontWeight: 800, color: dark, letterSpacing: "-0.01em" }}>{form.bankName || "BPI"}</span>
+                      </div>
+                      <div style={{ paddingLeft: "10px", borderLeft: `3px solid ${accent}`, display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {form.bpiAccountName && <div style={{ fontSize: "12px", color: dark }}>{form.bpiAccountName}</div>}
+                        {form.bpiAccountNumber && (
+                          <div style={{ fontSize: "12px", color: dark }}>
+                            Account No. <span style={{ fontFamily: "Courier New, monospace", fontWeight: 700, letterSpacing: "0.04em" }}>{form.bpiAccountNumber}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {form.gcashEntries.length === 0 && !form.bpiAccountName && !form.bpiAccountNumber && (
+                    <div style={{ color: `${dark}40`, fontSize: "11px", fontStyle: "italic" }}>Fill in payment details on the left.</div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── NOTES — centred ── */}
               {form.notes.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-white/15 space-y-1.5">
-                  {form.notes.map((note, index) => (
-                    <p key={index} className="text-[11px] text-amber-200/90 text-center leading-relaxed">
-                      &bull; {note}
-                    </p>
+                <div style={{ padding: "9px 32px 13px", borderTop: `1px solid ${dark}12`, zIndex: 1, position: "relative", textAlign: "center" }}>
+                  <div style={{ width: "30px", height: "2px", background: accent, margin: "0 auto 6px", borderRadius: "1px", opacity: 0.55 }} />
+                  {form.notes.map((note, i) => (
+                    <div key={i} style={{ fontSize: "9.5px", color: "#c0392b", lineHeight: 1.7, fontStyle: "italic" }}>
+                      *{note}
+                    </div>
                   ))}
                 </div>
               )}
+
+              {/* Bottom fintech bar */}
+              <div style={{ height: "4px", background: `linear-gradient(to right, ${dark}18, ${accent}99, ${dark}18)`, zIndex: 1, position: "relative" }} />
+
             </div>
+            {/* ═══ END POSTER ═══ */}
           </div>
         </div>
+
+        <div className="mt-6 flex justify-center w-full max-w-[520px] print:hidden">
+          <button onClick={handleDownloadPng} disabled={isExporting}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-resort-olive text-resort-white rounded shadow hover:bg-resort-olive/90 transition disabled:opacity-50 font-bold">
+            <Download className="w-5 h-5" />
+            {isExporting ? "Exporting..." : "Download Poster as PNG"}
+          </button>
+        </div>
       </div>
+
     </div>
   );
 }
-
