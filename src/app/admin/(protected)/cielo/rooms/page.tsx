@@ -27,10 +27,6 @@ export default async function CieloRoomsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
-        <strong>Cielo Alto Rooms</strong> — AC upgrade adds ₱500 to the base fan rate. Mini Cabin is fan-only with no extra guests allowed.
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {rooms?.map((room) => {
           const imageUrl = room.image || CIELO_ROOM_FALLBACKS[room.slug] || "";

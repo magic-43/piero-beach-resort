@@ -199,7 +199,7 @@ export function AdminMobileHeader() {
     <div className="md:hidden flex items-center justify-between px-6 py-5 bg-resort-offwhite sticky top-0 z-40 print:hidden border-b border-resort-cocoa/10">
       <h2 className="font-serif text-xl text-resort-cocoa tracking-wide">{pageTitle}</h2>
       
-      {/* Mobile Top Right Header: Switch Property button right next to Settings */}
+      {/* Mobile Top Right Header: Switch Property button (and Sign Out if on settings) */}
       <div className="flex items-center gap-1">
         <Link
           href="/admin"
@@ -209,15 +209,7 @@ export function AdminMobileHeader() {
           <ArrowLeftRight className="w-5 h-5" />
         </Link>
 
-        {!pathname.includes("/settings") ? (
-          <Link
-            href={`${base}/settings`}
-            title="Settings"
-            className="p-2 text-resort-cocoa/70 hover:text-resort-cocoa hover:bg-resort-sand/40 rounded-lg transition-colors"
-          >
-            <Settings className="w-5 h-5" />
-          </Link>
-        ) : (
+        {pathname.includes("/settings") && (
           <form action={adminLogout}>
             <button
               type="submit"
