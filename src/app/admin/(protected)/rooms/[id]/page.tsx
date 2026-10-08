@@ -16,7 +16,7 @@ export default async function AdminRoomEditPage({
   const supabase = await createAdminClient();
 
   const [{ data: room }, { data: settings }] = await Promise.all([
-    supabase.from("rooms").select("*").eq("id", id).single(),
+    supabase.from("rooms").select("*").eq("id", id).eq("property_id", "piero").single(),
     supabase.from("resort_settings").select("global_discount_percentage").eq("id", 1).single(),
   ]);
 

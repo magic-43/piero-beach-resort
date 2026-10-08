@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
       .from('rooms')
       .select('*')
       .eq('slug', input.roomSlug)
+      .eq('property_id', 'piero')
       .eq('is_active', true)
       .single();
       
@@ -107,6 +108,7 @@ export async function POST(req: NextRequest) {
         client_request_id: input.clientRequestId,
         guest_access_token_hash: hashedToken,
         room_id: room.id,
+        property_id: room.property_id || 'piero',
         check_in: input.checkIn,
         check_out: input.checkOut,
         adult_guests: input.adultGuests,

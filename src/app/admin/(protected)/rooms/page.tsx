@@ -11,7 +11,11 @@ export default async function AdminRoomsPage() {
   await requireAdmin();
   const supabase = await createAdminClient();
 
-  const { data: rooms } = await supabase.from("rooms").select("*").order("id");
+  const { data: rooms } = await supabase
+    .from("rooms")
+    .select("*")
+    .eq("property_id", "piero")
+    .order("id");
 
   return (
     <div className="space-y-8">

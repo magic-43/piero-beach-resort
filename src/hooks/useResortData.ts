@@ -17,7 +17,7 @@ export function useResortData(initialData?: any) {
       try {
         const [settingsRes, roomsRes] = await Promise.all([
           supabase.from("resort_settings").select("*").eq("id", 1).single(),
-          supabase.from("rooms").select("*"),
+          supabase.from("rooms").select("*").eq("property_id", "piero"),
         ]);
 
         if (settingsRes.data) {
