@@ -76,6 +76,7 @@ export function ReservationProvider({ children }: { children: ReactNode }) {
         setState({
           ...getInitialState(), // Ensure missing keys are populated
           ...parsed,
+          paymentOption: "full",
           clientRequestId: requestId,
           selectedVilla: syncedVilla ?? parsed.selectedVilla,
         });
@@ -152,8 +153,8 @@ export function ReservationProvider({ children }: { children: ReactNode }) {
   }
   
   const totalPrice = basePrice + extraAdultsCost;
-  const amountDueToday = state.paymentOption === "half" ? Math.round(totalPrice / 2) : totalPrice;
-  const remainingBalance = totalPrice - amountDueToday;
+  const amountDueToday = totalPrice;
+  const remainingBalance = 0;
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";

@@ -111,7 +111,7 @@ export default function ReserveConfirmationPage() {
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-resort-cocoa/10">
                       <span className="text-resort-cocoa/70">Payment Option</span>
-                      <span className="font-medium text-resort-cocoa">{state.paymentOption === 'full' ? 'Full Payment' : '50% Deposit'}</span>
+                      <span className="font-medium text-resort-cocoa">Full Payment</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-resort-cocoa/10">
                       <span className="text-resort-cocoa/70">Amount Submitted</span>

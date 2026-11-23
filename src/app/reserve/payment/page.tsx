@@ -68,7 +68,7 @@ export default function ReservePaymentPage() {
           guestEmail: state.guestDetails.email,
           guestPhone: state.guestDetails.phone,
           specialRequests: state.guestDetails.specialRequests,
-          paymentOption: state.paymentOption,
+          paymentOption: "full",
           clientRequestId: state.clientRequestId
         })
       });
@@ -156,58 +156,20 @@ export default function ReservePaymentPage() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
               <div className="lg:col-span-7 space-y-10">
-                <div>
-                  <h2 className="font-serif text-2xl text-resort-cocoa mb-6">1. Payment Option</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label className={`relative border-2 rounded-xl p-6 cursor-pointer bg-resort-white transition-colors ${state.paymentOption === "full" ? "border-resort-terracotta" : "border-transparent hover:border-resort-terracotta/50 shadow-sm"}`}>
-                      <input
-                        type="radio"
-                        name="paymentOption"
-                        className="absolute opacity-0"
-                        checked={state.paymentOption === "full"}
-                        onChange={() => updateState({ paymentOption: "full" })}
-                      />
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-bold text-resort-cocoa mb-1">Full payment</p>
-                          <p className="text-sm text-resort-cocoa/70">Pay the entire amount now</p>
-                        </div>
-                        {state.paymentOption === "full" && <CheckCircle2 className="w-6 h-6 text-resort-terracotta" />}
-                      </div>
-                    </label>
-
-                    <label className={`relative border-2 rounded-xl p-6 cursor-pointer bg-resort-white transition-colors ${state.paymentOption === "half" ? "border-resort-terracotta" : "border-transparent hover:border-resort-terracotta/50 shadow-sm"}`}>
-                      <input
-                        type="radio"
-                        name="paymentOption"
-                        className="absolute opacity-0"
-                        checked={state.paymentOption === "half"}
-                        onChange={() => updateState({ paymentOption: "half" })}
-                      />
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-bold text-resort-cocoa mb-1">Pay half now</p>
-                          <p className="text-sm text-resort-cocoa/70">Pay 50% now, the rest upon check-in</p>
-                        </div>
-                        {state.paymentOption === "half" && <CheckCircle2 className="w-6 h-6 text-resort-terracotta" />}
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
                 <div className="bg-resort-sand p-6 rounded-xl flex items-center justify-between border border-resort-olive/20">
                   <div>
-                    <p className="text-sm text-resort-cocoa/70 uppercase tracking-widest font-bold mb-1">Amount Due Today</p>
-                    <p className="text-3xl font-serif text-resort-cocoa">{formatCurrency(amountDueToday)}</p>
+                    <p className="text-sm text-resort-cocoa/70 uppercase tracking-widest font-bold mb-1">Total Amount Due</p>
+                    <p className="text-3xl font-serif text-resort-cocoa">{formatCurrency(totalPrice)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-resort-cocoa/70">Total Price</p>
-                    <p className="font-medium text-resort-cocoa line-through opacity-50">{formatCurrency(totalPrice)}</p>
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-resort-olive/15 text-resort-olive uppercase tracking-wider">
+                      Full Payment
+                    </span>
                   </div>
                 </div>
 
                 <div>
-                  <h2 className="font-serif text-2xl text-resort-cocoa mb-6">2. Payment Method</h2>
+                  <h2 className="font-serif text-2xl text-resort-cocoa mb-6">1. Payment Method</h2>
                   <div className="sm:hidden rounded-full border border-resort-cocoa/15 bg-resort-white p-1 shadow-sm">
                     <div className="grid grid-cols-2 gap-1">
                       {bankTransferEnabled && (
@@ -317,7 +279,7 @@ export default function ReservePaymentPage() {
                 </div>
 
                 <div>
-                  <h2 className="font-serif text-2xl text-resort-cocoa mb-6">3. Proof of Payment</h2>
+                  <h2 className="font-serif text-2xl text-resort-cocoa mb-6">2. Proof of Payment</h2>
                   <label htmlFor="payment-proof" className="border-2 border-dashed border-resort-cocoa/20 rounded-xl p-6 sm:p-10 text-center bg-resort-white hover:bg-resort-sand/30 transition-colors cursor-pointer flex flex-col items-center justify-center block">
                     <input
                       type="file"

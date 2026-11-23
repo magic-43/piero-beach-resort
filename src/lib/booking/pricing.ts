@@ -64,14 +64,9 @@ export function calculatePricing(input: PricingInput): PricingOutput {
   // Grand total
   const grandTotal = roundPHP(roomTotal + extraPersonTotal);
 
-  // Amount due now based on payment option (excluding deposit)
-  let amountDueNow = grandTotal;
-  let remainingBalance = 0;
-
-  if (input.paymentOption === 'half') {
-    amountDueNow = roundPHP(grandTotal / 2);
-    remainingBalance = roundPHP(grandTotal - amountDueNow);
-  }
+  // Full payment is required for reservations
+  const amountDueNow = grandTotal;
+  const remainingBalance = 0;
 
   return {
     nights,

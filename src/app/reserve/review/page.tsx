@@ -35,7 +35,6 @@ export default function ReserveReviewPage() {
   const baseCapacity = room.maxGuests - room.extraGuestAllowance;
   const extraAdultsCount = Math.max(0, state.adultGuests - baseCapacity);
   const extraAdultsCost = extraAdultsCount * bookingSettings.extraPersonFee * nights;
-  const deposit = Math.round(totalPrice / 2);
   const { fullName, email, phone, specialRequests } = state.guestDetails;
 
   return (
@@ -159,7 +158,7 @@ export default function ReserveReviewPage() {
                     <ul className="space-y-4">
                       <li className="flex items-start">
                         <CreditCard className="w-5 h-5 text-resort-olive mr-4 shrink-0 mt-0.5" />
-                        <p className="text-sm text-resort-cocoa/80">Proceed to payment and choose either full payment or a 50% deposit.</p>
+                        <p className="text-sm text-resort-cocoa/80">Proceed to payment to secure your reservation with full payment.</p>
                       </li>
                       <li className="flex items-start">
                         <ShieldCheck className="w-5 h-5 text-resort-olive mr-4 shrink-0 mt-0.5" />
@@ -203,10 +202,6 @@ export default function ReserveReviewPage() {
                       <div className="flex justify-between font-bold text-resort-cocoa text-lg pt-4 border-t border-resort-cocoa/10">
                         <span>Grand Total</span>
                         <span>{formatCurrency(totalPrice)}</span>
-                      </div>
-                      <div className="flex justify-between text-resort-olive font-medium pt-2">
-                        <span>Deposit Required (50%)</span>
-                        <span>{formatCurrency(deposit)}</span>
                       </div>
                     </div>
 
